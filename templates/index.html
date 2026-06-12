@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCChecker - PC診断・アップグレード提案</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="header-icon">🖥️</span>
+        <h1>PCChecker</h1>
+      </div>
+      <p class="header-sub">現在のPCスペックを分析し、ミドルスペック化のための最適なパーツをご提案します</p>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- 分析開始セクション -->
+    <section id="start-section" class="card start-card">
+      <div class="start-content">
+        <div class="start-icon">🔍</div>
+        <h2>PCスペックを分析する</h2>
+        <p>CPUやGPU、RAM、ストレージなどのスペックを自動取得し、<br>2025年現在のミドルスペック基準と比較します。</p>
+        <button id="analyze-btn" class="btn btn-primary" onclick="startAnalysis()">
+          分析を開始する
+        </button>
+      </div>
+    </section>
+
+    <!-- ローディング -->
+    <section id="loading-section" class="hidden">
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <p class="loading-text">PCスペックを分析中...</p>
+        <p class="loading-sub">少々お待ちください</p>
+      </div>
+    </section>
+
+    <!-- エラー -->
+    <section id="error-section" class="hidden card error-card">
+      <div class="error-icon">⚠️</div>
+      <h2>エラーが発生しました</h2>
+      <p id="error-message"></p>
+      <button class="btn btn-secondary" onclick="location.reload()">再試行する</button>
+    </section>
+
+    <!-- 結果セクション -->
+    <section id="result-section" class="hidden">
+
+      <!-- プロファイル切替タブ -->
+      <div class="card profile-tabs-card">
+        <div class="profile-tabs-buttons" role="tablist">
+          <button class="profile-tab" data-profile="low" role="tab">
+            <span class="profile-tab-icon">💡</span>
+            <span class="profile-tab-label">ロースペック</span>
+          </button>
+          <button class="profile-tab" data-profile="mid" role="tab">
+            <span class="profile-tab-icon">🎯</span>
+            <span class="profile-tab-label">ミドルスペック</span>
+          </button>
+          <button class="profile-tab" data-profile="high" role="tab">
+            <span class="profile-tab-icon">🚀</span>
+            <span class="profile-tab-label">ハイスペック</span>
+          </button>
+        </div>
+        <p class="profile-desc" id="profile-desc"></p>
+      </div>
+
+      <!-- 総合評価 -->
+      <div class="card overall-card" id="overall-card">
+        <h2 class="section-title">総合評価</h2>
+        <div class="overall-layout">
+          <div class="grade-circle" id="grade-circle">
+            <span class="grade-letter" id="grade-letter">-</span>
+          </div>
+          <div class="overall-info">
+            <div class="overall-label" id="overall-label"></div>
+            <div class="overall-score">スコア: <span id="overall-score-val">--</span> / 100</div>
+            <div class="score-bar-wrap">
+              <div class="score-bar">
+                <div class="score-bar-fill" id="overall-bar"></div>
+              </div>
+            </div>
+            <p class="overall-message" id="overall-message"></p>
+            <div id="priority-list" class="priority-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- システム情報 -->
+      <div class="card" id="sysinfo-card">
+        <h2 class="section-title">システム情報</h2>
+        <div class="sysinfo-grid" id="sysinfo-grid"></div>
+      </div>
+
+      <!-- コンポーネント評価 -->
+      <h2 class="section-title standalone">コンポーネント別評価 &amp; アップグレード提案</h2>
+      <div id="components-grid" class="components-grid"></div>
+
+      <!-- 再分析ボタン -->
+      <div class="reanalyze-wrap">
+        <button class="btn btn-secondary" onclick="location.reload()">
+          再分析する
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>PCChecker — スペック情報はお使いのPC上でローカルに収集されます</p>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

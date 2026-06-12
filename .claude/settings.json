@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(run)",
+      "Skill(run:*)",
+      "PowerShell(python -c \"import flask; print\\('Flask', flask.__version__\\)\")",
+      "PowerShell(python -m pip install Flask==3.0.0 2>&1)",
+      "PowerShell(python main.py)"
+    ]
+  }
+}
