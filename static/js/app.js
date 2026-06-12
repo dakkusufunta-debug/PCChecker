@@ -328,6 +328,104 @@ function buildComponentCard(s) {
   `;
 }
 
+// ---------------------------------------------------------------------------
+// シェアカード(診断スコアのPNG画像生成)
+// ---------------------------------------------------------------------------
+
+const GRADE_COLORS = { A: "#00d4aa", B: "#6c63ff", C: "#ffd460", D: "#ff5f6d" };
+const SHARE_URL = "https://github.com/dakkusufunta-debug/PCChecker";
+
+function drawShareCard() {
+  const p = currentData.profiles[currentProfile];
+  const overall = p.overall;
+  const specs = currentData.specs;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;
+  canvas.height = 630;
+  const ctx = canvas.getContext("2d");
+
+  // 背景とカード
+  ctx.fillStyle = "#0f1117";
+  ctx.fillRect(0, 0, 1200, 630);
+  ctx.fillStyle = "#1e2130";
+  ctx.beginPath();
+  ctx.roundRect(40, 40, 1120, 550, 24);
+  ctx.fill();
+  ctx.strokeStyle = "#2d3148";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // ヘッダー
+  ctx.fillStyle = "#6c63ff";
+  ctx.font = "bold 44px 'Segoe UI', 'Yu Gothic UI', sans-serif";
+  ctx.fillText("🖥️ PCChecker", 80, 120);
+  ctx.fillStyle = "#8b90a7";
+  ctx.font = "24px 'Segoe UI', 'Yu Gothic UI', sans-serif";
+  ctx.fillText("PC診断・アップグレード提案", 80, 158);
+
+  // グレードサークル
+  const gradeColor = GRADE_COLORS[overall.grade] || "#6c63ff";
+  ctx.beginPath();
+  ctx.arc(220, 360, 110, 0, Math.PI * 2);
+  ctx.strokeStyle = gradeColor;
+  ctx.lineWidth = 10;
+  ctx.stroke();
+  ctx.fillStyle = gradeColor;
+  ctx.font = "bold 120px 'Segoe UI', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(overall.grade, 220, 405);
+  ctx.textAlign = "left";
+
+  // スコアと評価
+  ctx.fillStyle = "#e8eaf0";
+  ctx.font = "bold 64px 'Segoe UI', 'Yu Gothic UI', sans-serif";
+  ctx.fillText(`スコア ${overall.score} / 100`, 400, 320);
+  ctx.fillStyle = gradeColor;
+  ctx.font = "bold 36px 'Segoe UI', 'Yu Gothic UI', sans-serif";
+  ctx.fillText(overall.label, 400, 375);
+  ctx.fillStyle = "#8b90a7";
+  ctx.font = "26px 'Segoe UI', 'Yu Gothic UI', sans-serif";
+  ctx.fillText(`評価基準: ${p.label}`, 400, 420);
+
+  // 主要スペック
+  const specLines = [
+    `CPU: ${(specs.cpu_name || "不明").slice(0, 40)}`,
+    `GPU: ${(specs.gpu_name || "不明").slice(0, 40)}`,
+    `RAM: ${specs.ram_total_gb} GB ${specs.ram_type || ""}`,
+  ];
+  ctx.fillStyle = "#e8eaf0";
+  ctx.font = "24px 'Segoe UI', 'Yu Gothic UI', sans-serif";
+  specLines.forEach((line, i) => ctx.fillText(line, 400, 470 + i * 36));
+
+  // フッター
+  ctx.fillStyle = "#8b90a7";
+  ctx.font = "20px 'Segoe UI', 'Yu Gothic UI', sans-serif";
+  // toISOString()はUTCで日付がズレるためローカル日付で整形する
+  const today = new Date().toLocaleDateString("sv-SE");
+  ctx.fillText(`${today} 診断  |  あなたのPCもチェック → ${SHARE_URL}`, 80, 565);
+
+  return canvas;
+}
+
+function downloadShareCard() {
+  if (!currentData) return;
+  const canvas = drawShareCard();
+  const link = document.createElement("a");
+  link.download = `pcchecker_score_${currentProfile}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+function shareOnX() {
+  if (!currentData) return;
+  const overall = currentData.profiles[currentProfile].overall;
+  const text = `私のPCスコアは ${overall.score}点(${overall.grade}ランク)でした!\n` +
+               `あなたのPCもPCCheckerで診断してみよう💻\n#PCChecker`;
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SHARE_URL)}`;
+  window.open(url, "_blank", "noopener");
+}
+
 function animateBars(overallScore, scores) {
   const overallBar = document.getElementById("overall-bar");
   if (overallBar) overallBar.style.width = overallScore + "%";
