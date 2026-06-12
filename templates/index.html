@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PCChecker - PC診断・アップグレード提案</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=20260613" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260613-2" />
 </head>
 <body>
   <header class="header">
@@ -90,6 +90,19 @@
         </div>
       </div>
 
+      <!-- 買い替え vs アップグレード判定 -->
+      <div class="card replacement-card" id="replacement-card">
+        <h2 class="section-title">買い替え判定</h2>
+        <div class="replacement-verdict" id="replacement-verdict"></div>
+        <p class="replacement-summary" id="replacement-summary"></p>
+        <ul class="replacement-reasons" id="replacement-reasons"></ul>
+        <div id="bto-section" class="hidden">
+          <div class="upgrade-title">🛒 買い替え候補(楽天市場)</div>
+          <div id="bto-list" class="upgrade-list"></div>
+          <div class="upgrade-disclaimer">価格は楽天市場の検索結果に基づく参考値です(リンクはアフィリエイトを含みます)</div>
+        </div>
+      </div>
+
       <!-- システム情報 -->
       <div class="card" id="sysinfo-card">
         <h2 class="section-title">システム情報</h2>
@@ -114,6 +127,6 @@
     <p class="footer-credit">価格・商品情報は楽天市場から取得した参考値です(Supported by <a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener">Rakuten Developers</a>)。掲載リンクには成果報酬型(アフィリエイト)リンクが含まれます。</p>
   </footer>
 
-  <script src="/static/js/app.js?v=20260613"></script>
+  <script src="/static/js/app.js?v=20260613-2"></script>
 </body>
 </html>

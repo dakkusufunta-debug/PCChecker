@@ -325,3 +325,77 @@ def search_part(part_name: str, ref_price: int | None = None) -> dict | None:
         cache[keyword] = {"fetched_at": time.time(), "result": result}
         _save_cache(cache)
         return result
+
+
+# ---------------------------------------------------------------------------
+# BTO PC検索(買い替え提案用)
+# ---------------------------------------------------------------------------
+
+# BTO検索の価格レンジ: 参考価格の0.5〜2.5倍を妥当な完成品とみなす
+BTO_MIN_RATIO = 0.5
+BTO_MAX_RATIO = 2.5
+BTO_MAX_ITEMS = 3
+
+
+def is_valid_bto_item(keyword: str, item_name: str, price: int,
+                      ref_price: int) -> bool:
+    """買い替え候補の完成品PCとして妥当か判定する
+
+    パーツ検索と違い完成品PCは除外しない。新品であること・キーワードの
+    型番(搭載GPU等)を含むこと・価格帯が妥当であることのみ要求する。
+    """
+    if not is_new_item(item_name):
+        return False
+    if any(marker in item_name for marker in ACCESSORY_MARKERS):
+        return False
+    # ノートPCは別カテゴリのため除外(デスクトップの買い替え提案)
+    if "ノート" in item_name:
+        return False
+    if not matches_model(keyword, item_name):
+        return False
+    if not (ref_price * BTO_MIN_RATIO <= price <= ref_price * BTO_MAX_RATIO):
+        return False
+    return True
+
+
+def search_bto(keyword: str, ref_price: int) -> list[dict]:
+    """買い替え候補のBTO PCを最大3件返す(安い順、キャッシュつき)"""
+    norm = normalize_keyword(keyword)
+    cache_key = f"bto:{norm}"
+
+    with _lock:
+        cache = _load_cache()
+        entry = cache_get(cache, cache_key)
+        if entry is not None:
+            return entry.get("result") or []
+
+        try:
+            items = _call_api(norm)
+        except (urllib.error.URLError, urllib.error.HTTPError, OSError,
+                json.JSONDecodeError):
+            return []
+
+        results: list[dict] = []
+        seen_shops: set[str] = set()
+        for item in items:
+            name = item.get("itemName", "")
+            price = int(item.get("itemPrice", 0))
+            shop = item.get("shopName", "")
+            if not is_valid_bto_item(norm, name, price, ref_price):
+                continue
+            # 同一ショップの色違い・構成違いの重複を避ける
+            if shop in seen_shops:
+                continue
+            seen_shops.add(shop)
+            results.append({
+                "price": price,
+                "item_name": name,
+                "url": item.get("affiliateUrl") or item.get("itemUrl", ""),
+                "shop": shop,
+            })
+            if len(results) >= BTO_MAX_ITEMS:
+                break
+
+        cache[cache_key] = {"fetched_at": time.time(), "result": results}
+        _save_cache(cache)
+        return results

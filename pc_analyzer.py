@@ -1645,6 +1645,77 @@ def calculate_overall(core_scores: list[ComponentScore]) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# 買い替え vs アップグレード判定
+# ---------------------------------------------------------------------------
+
+# 買い替え提案時に楽天で検索するBTO PCのキーワードと価格帯(プロファイル別)
+BTO_SUGGESTIONS: dict[str, dict] = {
+    "low": {
+        "keyword": "デスクトップパソコン 新品 Ryzen 16GB SSD",
+        "ref_price": 80000,
+        "label": "普段使い向けの新品デスクトップPC",
+    },
+    "mid": {
+        "keyword": "ゲーミングPC RTX 5060 搭載 新品",
+        "ref_price": 200000,
+        "label": "RTX 5060クラス搭載のゲーミングPC",
+    },
+    "high": {
+        "keyword": "ゲーミングPC RTX 5070 搭載 新品",
+        "ref_price": 300000,
+        "label": "RTX 5070クラス搭載のハイエンドゲーミングPC",
+    },
+}
+
+
+def judge_replacement(profile_key: str, core_scores: list[ComponentScore],
+                      mb_score: ComponentScore) -> dict:
+    """部分アップグレードで延命するか、買い替えるべきかを判定する
+
+    考え方: CPU・マザーボード(プラットフォーム)の交換が必要になると、
+    RAM・場合によってはストレージも巻き込む「総とっかえ」になり、
+    部分アップグレードの価格優位性が消えるため、買い替えと比較すべき。
+    """
+    below = [s.name for s in core_scores if s.status == "below"]
+    platform_old = mb_score.status == "below"
+    cpu_below = any(s.name == "CPU" and s.status == "below" for s in core_scores)
+
+    reasons: list[str] = []
+    if platform_old:
+        reasons.append("マザーボード(プラットフォーム)がこの基準の世代要件を下回っています。"
+                       "CPU交換にはマザーボード・RAMの同時交換が必要になる可能性が高いです。")
+    if below:
+        reasons.append(f"基準以下のコアコンポーネントが {len(below)} 種あります"
+                       f"({'・'.join(below)})。")
+
+    if platform_old and (len(below) >= 3 or (cpu_below and len(below) >= 2)):
+        verdict = "replace"
+        summary = ("プラットフォーム一新を含む大規模な交換が必要なため、"
+                   "パーツ単位の延命より新しいPCへの買い替えのほうが割安になる可能性が高いです。")
+    elif platform_old and len(below) >= 1:
+        verdict = "consider"
+        summary = ("アップグレードは可能ですが、プラットフォームが古いため"
+                   "投資効果が限定的です。買い替えとの価格比較をおすすめします。")
+    elif len(below) >= 3:
+        verdict = "consider"
+        summary = ("複数のパーツ交換が必要です。合計費用によっては"
+                   "買い替えのほうが効率的な場合があります。")
+    else:
+        verdict = "upgrade"
+        summary = ("不足しているパーツの交換だけで十分に改善できます。"
+                   "部分アップグレードでの延命がおすすめです。")
+        if not below:
+            reasons = ["コアコンポーネントはこの基準を満たしています。"]
+
+    return {
+        "verdict": verdict,            # "upgrade" | "consider" | "replace"
+        "summary": summary,
+        "reasons": reasons,
+        "bto": BTO_SUGGESTIONS.get(profile_key),
+    }
+
+
+# ---------------------------------------------------------------------------
 # エントリーポイント
 # ---------------------------------------------------------------------------
 
@@ -1673,10 +1744,11 @@ def run_analysis() -> dict:
             analyze_gpu(specs, profile),
             analyze_storage(specs, profile),
         ]
+        mb_score = analyze_motherboard(specs, profile)
         extra_scores = [
             analyze_display(specs, profile),
             analyze_network(specs, profile),
-            analyze_motherboard(specs, profile),
+            mb_score,
             analyze_ai_accelerator(specs, profile),
             system_health_score,
             psu_score,
@@ -1686,6 +1758,7 @@ def run_analysis() -> dict:
             "description": profile["description"],
             "scores":      [_score_to_dict(s) for s in core_scores + extra_scores],
             "overall":     calculate_overall(core_scores),
+            "replacement": judge_replacement(key, core_scores, mb_score),
         }
 
     return {

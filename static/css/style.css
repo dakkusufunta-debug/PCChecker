@@ -427,3 +427,34 @@ body {
   color: var(--text-muted);
   text-decoration: underline;
 }
+
+/* ----- 買い替え判定 ----- */
+.replacement-verdict {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+.verdict-upgrade  { background: rgba(0, 212, 170, 0.15);  color: var(--exceeds); }
+.verdict-consider { background: rgba(255, 212, 96, 0.15); color: var(--meets); }
+.verdict-replace  { background: rgba(255, 95, 109, 0.15); color: var(--below); }
+
+.replacement-summary {
+  color: var(--text);
+  font-size: 0.92rem;
+  margin: 6px 0 10px;
+}
+
+.replacement-reasons {
+  margin: 0 0 12px 1.2em;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 0.83rem;
+}
+
+.replacement-reasons li {
+  margin-bottom: 4px;
+}

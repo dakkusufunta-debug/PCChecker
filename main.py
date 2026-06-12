@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from pc_analyzer import run_analysis
-from rakuten_client import is_configured, search_part
+from rakuten_client import is_configured, search_bto, search_part
 
 app = FastAPI(title="PCChecker", version="1.0.0")
 
@@ -65,6 +65,20 @@ def price(q: str, ref: int = 0):
     if result is None:
         return {"ok": False, "reason": "no_match"}
     return {"ok": True, **result}
+
+
+@app.get("/api/bto", response_class=JSONResponse)
+def bto(q: str, ref: int):
+    """買い替え候補のBTO PC(最大3件)を楽天市場から返す"""
+    if not q.strip() or ref <= 0:
+        return JSONResponse(status_code=400, content={"ok": False, "reason": "bad_request"})
+    if not is_configured():
+        return {"ok": False, "reason": "not_configured"}
+    try:
+        items = search_bto(q, ref_price=ref)
+    except Exception:
+        return {"ok": False, "reason": "error"}
+    return {"ok": True, "items": items}
 
 
 def open_browser():

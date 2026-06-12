@@ -86,8 +86,71 @@ function _applyProfileDom(key) {
   const p = currentData.profiles[key];
   document.getElementById("profile-desc").textContent = p.description;
   renderOverall(p.overall);
+  renderReplacement(p.replacement);
   renderComponents(p.scores);
   enrichPrices();
+}
+
+const VERDICT_INFO = {
+  upgrade:  { label: "✅ 部分アップグレードで延命がおすすめ", cls: "verdict-upgrade" },
+  consider: { label: "⚖️ 買い替えとの比較を推奨",           cls: "verdict-consider" },
+  replace:  { label: "🔄 買い替えがおすすめ",               cls: "verdict-replace" },
+};
+
+// BTO検索キーワード → 結果のクライアント側キャッシュ
+const btoCache = new Map();
+
+function renderReplacement(rep) {
+  const card = document.getElementById("replacement-card");
+  if (!rep) { card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+
+  const info = VERDICT_INFO[rep.verdict] || VERDICT_INFO.upgrade;
+  const verdictEl = document.getElementById("replacement-verdict");
+  verdictEl.textContent = info.label;
+  verdictEl.className = `replacement-verdict ${info.cls}`;
+  document.getElementById("replacement-summary").textContent = rep.summary;
+
+  const reasonsEl = document.getElementById("replacement-reasons");
+  reasonsEl.innerHTML = (rep.reasons || []).map(r => `<li>${r}</li>`).join("");
+
+  const btoSection = document.getElementById("bto-section");
+  const btoList = document.getElementById("bto-list");
+  btoList.innerHTML = "";
+  if (rep.verdict === "upgrade" || !rep.bto) {
+    btoSection.classList.add("hidden");
+    return;
+  }
+  btoSection.classList.remove("hidden");
+  loadBtoItems(rep.bto, btoList);
+}
+
+async function loadBtoItems(bto, listEl) {
+  const key = bto.keyword;
+  let items = btoCache.get(key);
+  if (items === undefined) {
+    try {
+      const res = await fetch(`/api/bto?q=${encodeURIComponent(key)}&ref=${bto.ref_price}`);
+      const data = await res.json();
+      items = data.ok ? data.items : [];
+    } catch (e) {
+      items = [];
+    }
+    btoCache.set(key, items);
+  }
+  if (!listEl.isConnected) return;
+  if (items.length === 0) {
+    listEl.innerHTML = `<div class="upgrade-note">${bto.label}を楽天市場で確認できませんでした。</div>`;
+    return;
+  }
+  listEl.innerHTML = items.map(i => `
+    <div class="upgrade-item">
+      <span class="upgrade-name">${i.item_name.slice(0, 70)}${i.item_name.length > 70 ? "…" : ""}</span>
+      <span class="upgrade-price live">¥${i.price.toLocaleString()}</span>
+      <span class="upgrade-note">${i.shop}</span>
+      <span class="upgrade-buy"><a class="rakuten-btn" href="${i.url}" target="_blank" rel="noopener sponsored">楽天で見る</a></span>
+    </div>
+  `).join("");
 }
 
 // パーツ名 → 価格情報のクライアント側キャッシュ(プロファイル切替時の再取得防止)
