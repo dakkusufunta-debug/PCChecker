@@ -27,7 +27,7 @@ NPU_TOPS: dict[str, float] = {
 GPU_TENSOR_TOPS: dict[str, float] = {
     # RTX 50 シリーズ
     "RTX 5090": 3352.0, "RTX 5080": 1801.0, "RTX 5070 Ti": 1407.0,
-    "RTX 5070": 988.0,  "RTX 5060 Ti": 614.0,
+    "RTX 5070": 988.0,  "RTX 5060 Ti": 759.0, "RTX 5060": 614.0,
     # RTX 40 シリーズ
     "RTX 4090": 1321.0, "RTX 4080 SUPER": 836.0, "RTX 4080": 780.0,
     "RTX 4070 Ti SUPER": 706.0, "RTX 4070 Ti": 641.0,
@@ -54,6 +54,15 @@ EXTERNAL_TPU_TOPS: dict[str, float] = {
 # ---------------------------------------------------------------------------
 
 CPU_TDP: dict[str, int] = {
+    # Intel Core Ultra 200S (Arrow Lake)
+    "Ultra 9 285K": 125, "Ultra 7 265K": 125, "Ultra 5 245K": 125,
+    "Ultra 5 235": 65,
+    # AMD Ryzen 9000
+    "Ryzen 9 9950X": 170, "Ryzen 9 9900X": 120,
+    "Ryzen 7 9800X3D": 120, "Ryzen 7 9700X": 65,
+    "Ryzen 5 9600X": 65,
+    # AMD Ryzen 5000 (追加分)
+    "Ryzen 5 5600GT": 65,
     # Intel 第14世代
     "i9-14900K": 125, "i9-14900": 65,
     "i7-14700K": 125, "i7-14700": 65,
@@ -80,6 +89,11 @@ CPU_TDP: dict[str, int] = {
 GPU_TDP: dict[str, int] = {
     # RTX 50
     "RTX 5090": 575, "RTX 5080": 360, "RTX 5070 Ti": 300, "RTX 5070": 250,
+    "RTX 5060 Ti": 180, "RTX 5060": 145,
+    # RX 9000 (RDNA4)
+    "RX 9070 XT": 304, "RX 9070": 220, "RX 9060 XT": 180,
+    # Intel Arc B
+    "Arc B580": 190, "Arc B570": 150,
     # RTX 40
     "RTX 4090": 450, "RTX 4080 SUPER": 320, "RTX 4080": 320,
     "RTX 4070 Ti SUPER": 285, "RTX 4070 Ti": 285,
@@ -126,44 +140,42 @@ PROFILES: dict[str, dict] = {
         },
         "upgrade_options": {
             "cpu": [
-                {"name": "Intel Core i3-13100",  "price": "約 ¥18,000〜", "note": "4C/8T, 省電力・オフィス用途に最適"},
-                {"name": "AMD Ryzen 5 5500",      "price": "約 ¥13,000〜", "note": "6C/12T, AM4コスパ最強クラス"},
-                {"name": "Intel Core i5-12400",   "price": "約 ¥22,000〜", "note": "6C/12T, 軽量ゲームも快適"},
+                {"name": "Intel Core i3-14100",   "price": "約 ¥22,000〜", "note": "4C/8T, 省電力・オフィス用途に最適"},
+                {"name": "AMD Ryzen 5 5600GT",    "price": "約 ¥22,000〜", "note": "6C/12T, AM4・クーラー付属でコスパ良好"},
+                {"name": "AMD Ryzen 5 7600",      "price": "約 ¥29,000〜", "note": "6C/12T, AM5移行も視野に入るなら"},
             ],
             "ram": [
-                {"name": "DDR4-3200 8GB×1",              "price": "約 ¥2,500〜", "note": "最低限のシングル構成"},
-                {"name": "DDR4-3200 8GB×2 (16GB)",        "price": "約 ¥5,000〜", "note": "デュアルチャネルで体感向上"},
-                {"name": "DDR5-4800 8GB×2 (16GB)",        "price": "約 ¥8,000〜", "note": "DDR5プラットフォーム向け最小構成"},
+                {"name": "DDR4-3200 8GB×1",              "price": "約 ¥9,000〜",  "note": "最低限のシングル構成"},
+                {"name": "DDR4-3200 8GB×2 (16GB)",        "price": "約 ¥18,000〜", "note": "デュアルチャネルで体感向上"},
+                {"name": "DDR5-4800 8GB×2 (16GB)",        "price": "約 ¥30,000〜", "note": "DDR5プラットフォーム向け最小構成"},
             ],
             "gpu_low_vram": [
-                {"name": "GTX 1650 SUPER",   "price": "約 ¥15,000〜（中古）", "note": "4GB GDDR6, 軽量ゲーム・動画視聴"},
-                {"name": "AMD RX 6500 XT",   "price": "約 ¥18,000〜",        "note": "4GB GDDR6, 省電力設計"},
+                {"name": "NVIDIA RTX 3050",  "price": "約 ¥30,000〜", "note": "6GB GDDR6, 補助電源不要・軽量ゲーム向け"},
+                {"name": "Intel Arc B580",   "price": "約 ¥56,000〜", "note": "12GB GDDR6, VRAM大容量のエントリー上位"},
             ],
             "gpu_integrated": [
-                {"name": "GTX 1650",         "price": "約 ¥13,000〜（中古）", "note": "75W, 補助電源不要モデルあり"},
-                {"name": "AMD RX 6500 XT",   "price": "約 ¥18,000〜",        "note": "4GB, 省電力・コンパクト"},
+                {"name": "NVIDIA RTX 3050",  "price": "約 ¥30,000〜", "note": "6GB, 70W・補助電源不要モデルあり"},
+                {"name": "Intel Arc B580",   "price": "約 ¥56,000〜", "note": "12GB, フルHDゲームも視野"},
             ],
             "storage_hdd": [
-                {"name": "Crucial BX500 480GB (SATA SSD)", "price": "約 ¥5,000〜", "note": "コスパ重視・HDDから快速換装"},
-                {"name": "WD Green 240GB (SATA SSD)",      "price": "約 ¥3,500〜", "note": "省電力・低発熱のエントリーSSD"},
+                {"name": "Crucial BX500 500GB (SATA SSD)", "price": "約 ¥17,000〜", "note": "HDDから快速換装の定番"},
+                {"name": "Crucial P3 Plus 1TB (NVMe)",     "price": "約 ¥24,000〜", "note": "NVMe対応マザーボードなら"},
             ],
             "storage_sata": [
-                {"name": "Crucial P3 500GB (NVMe Gen3)",   "price": "約 ¥6,000〜", "note": "読み取り3500MB/s, コスパ重視"},
-                {"name": "WD Blue SN570 500GB (NVMe)",     "price": "約 ¥7,000〜", "note": "コスパ良好なNVMe"},
+                {"name": "Crucial P3 Plus 1TB (NVMe Gen4)", "price": "約 ¥24,000〜", "note": "読み取り5000MB/s, コスパ重視"},
             ],
             "storage_small": [
-                {"name": "Crucial BX500 480GB (SATA)", "price": "約 ¥5,000〜", "note": "コスパ重視・容量追加"},
-                {"name": "WD Green 480GB (SATA)",      "price": "約 ¥5,500〜", "note": "省電力のデータドライブ向け"},
+                {"name": "Crucial BX500 500GB (SATA)",  "price": "約 ¥17,000〜", "note": "コスパ重視・容量追加"},
+                {"name": "Crucial P3 Plus 1TB (NVMe)",  "price": "約 ¥24,000〜", "note": "大容量のデータドライブ向け"},
             ],
             "display_low_res": [
-                {"name": "BenQ GW2283 (22型 FHD)",       "price": "約 ¥10,000〜", "note": "フリッカーフリー・目に優しい"},
-                {"name": "IODATA EX-LDH241DB (24型 FHD)","price": "約 ¥12,000〜", "note": "コスパ重視のフルHD"},
+                {"name": "IODATA GigaCrysta 23.8型", "price": "約 ¥21,000〜", "note": "フルHD・ゲーミング対応の万能機"},
             ],
             "display_low_hz": [
-                {"name": "AOC 24B2XH (24型 FHD 75Hz)", "price": "約 ¥10,000〜", "note": "75Hz対応・コスパ重視"},
+                {"name": "IODATA GigaCrysta 23.8型", "price": "約 ¥21,000〜", "note": "高リフレッシュレート対応"},
             ],
             "display_gaming_hz": [
-                {"name": "ASUS VA24DQF (24型 FHD 100Hz)", "price": "約 ¥18,000〜", "note": "IPS / 100Hz / FHD"},
+                {"name": "ASUS TUF Gaming VG249Q3A (24型 180Hz)", "price": "約 ¥28,000〜", "note": "IPS / 180Hz / FHD"},
             ],
             "network_wired": [
                 {"name": "TP-Link UE300 (USB 3.0 Gigabit)", "price": "約 ¥1,500〜", "note": "USB接続・工事不要でGigabit化"},
@@ -177,11 +189,11 @@ PROFILES: dict[str, dict] = {
                 {"name": "ASUS PRIME B660M-A D4",    "price": "約 ¥14,000〜",         "note": "LGA1700, DDR4対応"},
             ],
             "gpu_none": [
-                {"name": "GTX 1650",       "price": "約 ¥13,000〜（中古）", "note": "75W, 補助電源不要モデルあり"},
-                {"name": "AMD RX 6400",    "price": "約 ¥15,000〜",        "note": "省電力・スリムPC対応"},
+                {"name": "NVIDIA RTX 3050", "price": "約 ¥30,000〜", "note": "6GB, 70W・補助電源不要モデルあり"},
+                {"name": "Intel Arc B580",  "price": "約 ¥56,000〜", "note": "12GB, フルHDゲームも視野"},
             ],
             "ai_accelerator": [
-                {"name": "Google Coral USB Accelerator", "price": "約 ¥9,000〜",
+                {"name": "Google Coral USB Accelerator", "price": "約 ¥17,000〜",
                  "note": "4 TOPS, USB接続・工事不要でAI推論を追加"},
             ],
         },
@@ -210,46 +222,45 @@ PROFILES: dict[str, dict] = {
         },
         "upgrade_options": {
             "cpu": [
-                {"name": "Intel Core i5-13400F", "price": "約 ¥25,000〜", "note": "6C/12T, 2.5GHz base"},
-                {"name": "AMD Ryzen 5 7600",     "price": "約 ¥28,000〜", "note": "6C/12T, 3.8GHz base"},
-                {"name": "Intel Core i5-14600K", "price": "約 ¥35,000〜", "note": "14C/20T, ハイコスパ"},
+                {"name": "AMD Ryzen 5 7600",       "price": "約 ¥29,000〜", "note": "6C/12T, AM5のコスパ定番"},
+                {"name": "Intel Core i5-14400F",   "price": "約 ¥41,000〜", "note": "10C/16T, LGA1700の手堅い選択"},
+                {"name": "AMD Ryzen 7 7800X3D",    "price": "約 ¥46,000〜", "note": "3D V-Cache搭載, ゲーム向け高コスパ"},
             ],
             "ram": [
-                {"name": "DDR4-3200 8GB×2 (16GB)",  "price": "約 ¥5,000〜",  "note": "コスパ重視・デュアルチャネル"},
-                {"name": "DDR4-3600 16GB×2 (32GB)", "price": "約 ¥10,000〜", "note": "将来も余裕のある32GB構成"},
-                {"name": "DDR5-4800 16GB×2 (32GB)", "price": "約 ¥12,000〜", "note": "DDR5プラットフォーム向け"},
-                {"name": "DDR5-6000 16GB×2 (32GB)", "price": "約 ¥18,000〜", "note": "高クロック・高パフォーマンス"},
+                {"name": "DDR4-3200 8GB×2 (16GB)",  "price": "約 ¥18,000〜", "note": "コスパ重視・デュアルチャネル"},
+                {"name": "DDR4-3600 16GB×2 (32GB)", "price": "約 ¥42,000〜", "note": "将来も余裕のある32GB構成"},
+                {"name": "DDR5-4800 16GB×2 (32GB)", "price": "約 ¥64,000〜", "note": "DDR5プラットフォーム向け"},
             ],
             "gpu_low_vram": [
-                {"name": "NVIDIA RTX 4060",   "price": "約 ¥45,000〜", "note": "8GB GDDR6, ミドルスペック定番"},
-                {"name": "AMD RX 7600 XT",    "price": "約 ¥45,000〜", "note": "16GB VRAM, コスパ良好"},
+                {"name": "NVIDIA RTX 5060",   "price": "約 ¥56,000〜", "note": "8GB GDDR7, ミドルスペック定番"},
+                {"name": "AMD RX 9060 XT",    "price": "約 ¥57,000〜", "note": "RDNA4世代, コスパ良好"},
             ],
             "gpu_integrated": [
-                {"name": "NVIDIA RTX 4060",    "price": "約 ¥45,000〜", "note": "ミドルスペック定番, 8GB GDDR6"},
-                {"name": "AMD RX 7600 XT",     "price": "約 ¥45,000〜", "note": "16GB VRAM, コスパ良好"},
-                {"name": "NVIDIA RTX 4060 Ti", "price": "約 ¥55,000〜", "note": "16GB版もあり, より高パフォーマンス"},
+                {"name": "NVIDIA RTX 5060",        "price": "約 ¥56,000〜", "note": "ミドルスペック定番, 8GB GDDR7"},
+                {"name": "AMD RX 9060 XT",         "price": "約 ¥57,000〜", "note": "RDNA4世代, コスパ良好"},
+                {"name": "NVIDIA RTX 5060 Ti 16GB", "price": "約 ¥95,000〜", "note": "16GB VRAM, より高パフォーマンス"},
             ],
             "storage_hdd": [
-                {"name": "Samsung 990 Pro 1TB (NVMe)",    "price": "約 ¥12,000〜", "note": "読み取り最大7450MB/s"},
-                {"name": "WD Black SN850X 1TB (NVMe)",    "price": "約 ¥13,000〜", "note": "読み取り最大7300MB/s"},
-                {"name": "Crucial P3 Plus 1TB (NVMe)",    "price": "約 ¥8,000〜",  "note": "コスパ重視"},
+                {"name": "Crucial P3 Plus 1TB (NVMe)",    "price": "約 ¥24,000〜", "note": "コスパ重視のNVMe"},
+                {"name": "WD Black SN850X 1TB (NVMe)",    "price": "約 ¥41,000〜", "note": "読み取り最大7300MB/s"},
+                {"name": "Samsung 990 Pro 1TB (NVMe)",    "price": "約 ¥48,000〜", "note": "読み取り最大7450MB/s"},
             ],
             "storage_sata": [
-                {"name": "Samsung 990 Pro 1TB (NVMe)",    "price": "約 ¥12,000〜", "note": "読み取り最大7450MB/s"},
-                {"name": "WD Blue SN580 1TB (NVMe)",      "price": "約 ¥9,000〜",  "note": "コスパ優秀なNVMe"},
+                {"name": "Crucial P3 Plus 1TB (NVMe)",    "price": "約 ¥24,000〜", "note": "コスパ重視のNVMe"},
+                {"name": "Samsung 990 Pro 1TB (NVMe)",    "price": "約 ¥48,000〜", "note": "読み取り最大7450MB/s"},
             ],
             "storage_small": [
-                {"name": "Samsung 870 EVO 1TB (SATA)", "price": "約 ¥10,000〜", "note": "信頼性の高いSATA SSD"},
+                {"name": "Crucial P3 Plus 1TB (NVMe)",  "price": "約 ¥24,000〜", "note": "大容量・コスパ重視"},
             ],
             "display_low_res": [
-                {"name": "BenQ GW2780 (27型 FHD)",    "price": "約 ¥20,000〜", "note": "コスパ重視フルHDモニター"},
+                {"name": "IODATA GigaCrysta 23.8型",  "price": "約 ¥21,000〜", "note": "フルHD・ゲーミング対応"},
                 {"name": "LG 27UL500-W (27型 4K)",    "price": "約 ¥35,000〜", "note": "4K UHDモニター"},
             ],
             "display_low_hz": [
-                {"name": "ASUS VA24DQF (24型 FHD 100Hz)", "price": "約 ¥18,000〜", "note": "IPS / 100Hz / FHD"},
+                {"name": "ASUS TUF Gaming VG249Q3A (24型 180Hz)", "price": "約 ¥28,000〜", "note": "IPS / 180Hz / FHD"},
             ],
             "display_gaming_hz": [
-                {"name": "ASUS TUF Gaming VG249Q3A (24型 180Hz)", "price": "約 ¥25,000〜", "note": "IPS / 180Hz / FHD"},
+                {"name": "ASUS TUF Gaming VG249Q3A (24型 180Hz)", "price": "約 ¥28,000〜", "note": "IPS / 180Hz / FHD"},
                 {"name": "MSI G274QPF-QD (27型 QHD 165Hz)",       "price": "約 ¥35,000〜", "note": "QHD / 165Hz / 量子ドット"},
             ],
             "network_wired": [
@@ -257,18 +268,18 @@ PROFILES: dict[str, dict] = {
             ],
             "network_wifi": [
                 {"name": "Intel Wi-Fi 6E AX210 (PCIe)",   "price": "約 ¥4,000〜", "note": "Wi-Fi 6E対応, 6GHz帯使用可"},
-                {"name": "ASUS PCE-AXE3000 (Wi-Fi 6E)",   "price": "約 ¥8,000〜", "note": "高感度アンテナ付きPCIeカード"},
+                {"name": "Intel BE200 Wi-Fi 7 (PCIe)",    "price": "約 ¥8,000〜", "note": "Wi-Fi 7対応PCIeカード"},
             ],
             "motherboard": [
-                {"name": "ASUS PRIME B760M-A",         "price": "約 ¥15,000〜", "note": "DDR4対応, LGA1700, コスパ重視"},
-                {"name": "MSI MAG B650 TOMAHAWK WIFI", "price": "約 ¥25,000〜", "note": "AM5対応, DDR5, PCIe 4.0/5.0"},
+                {"name": "ASUS PRIME B760M-A",         "price": "約 ¥17,000〜", "note": "DDR4対応, LGA1700, コスパ重視"},
+                {"name": "MSI MAG B650 TOMAHAWK WIFI", "price": "約 ¥35,000〜", "note": "AM5対応, DDR5, PCIe 4.0/5.0"},
             ],
             "gpu_none": [
-                {"name": "NVIDIA RTX 4060", "price": "約 ¥45,000〜", "note": "ミドルスペックの定番, 8GB VRAM"},
-                {"name": "AMD RX 7600",     "price": "約 ¥40,000〜", "note": "コスパ良好, 8GB VRAM"},
+                {"name": "NVIDIA RTX 5060", "price": "約 ¥56,000〜", "note": "ミドルスペックの定番, 8GB GDDR7"},
+                {"name": "AMD RX 9060 XT",  "price": "約 ¥57,000〜", "note": "RDNA4世代, コスパ良好"},
             ],
             "ai_accelerator": [
-                {"name": "Google Coral USB Accelerator",    "price": "約 ¥9,000〜",
+                {"name": "Google Coral USB Accelerator",    "price": "約 ¥17,000〜",
                  "note": "4 TOPS, 手軽に追加できるAI推論デバイス"},
                 {"name": "Intel Core Ultra 7 265K (AI Boost内蔵)", "price": "CPU交換参照",
                  "note": "36 TOPS NPU搭載 (Arrow Lake)"},
@@ -301,38 +312,35 @@ PROFILES: dict[str, dict] = {
         },
         "upgrade_options": {
             "cpu": [
-                {"name": "Intel Core i7-14700K",  "price": "約 ¥55,000〜", "note": "20C/28T, 高いシングルスレッド性能"},
-                {"name": "AMD Ryzen 7 7800X3D",   "price": "約 ¥58,000〜", "note": "3D V-Cache搭載, ゲーム最強クラス"},
-                {"name": "AMD Ryzen 9 7950X",     "price": "約 ¥90,000〜", "note": "16C/32T, 動画編集・AI向け最強"},
-                {"name": "Intel Core i9-14900K",  "price": "約 ¥80,000〜", "note": "24C/32T, 最高峰の総合性能"},
+                {"name": "AMD Ryzen 7 9800X3D",    "price": "約 ¥61,000〜", "note": "3D V-Cache第2世代, ゲーム最強クラス"},
+                {"name": "Intel Core Ultra 7 265K", "price": "約 ¥60,000〜", "note": "20C, NPU内蔵 (Arrow Lake)"},
+                {"name": "AMD Ryzen 9 9950X",      "price": "約 ¥96,000〜", "note": "16C/32T, 動画編集・AI向け最強"},
             ],
             "ram": [
-                {"name": "DDR5-6000 16GB×2 (32GB)",  "price": "約 ¥18,000〜", "note": "ゲーム向け高クロック構成"},
-                {"name": "DDR5-6000 32GB×2 (64GB)",  "price": "約 ¥35,000〜", "note": "動画編集・AI向け大容量"},
-                {"name": "DDR5-7200 16GB×2 (32GB)",  "price": "約 ¥25,000〜", "note": "OC対応ハイエンド構成"},
-                {"name": "DDR4-3600 32GB×2 (64GB)",  "price": "約 ¥18,000〜", "note": "DDR4プラットフォーム向け大容量"},
+                {"name": "DDR5-6000 16GB×2 (32GB)",  "price": "約 ¥70,000〜",  "note": "ゲーム向け高クロック構成"},
+                {"name": "DDR5-6000 32GB×2 (64GB)",  "price": "約 ¥130,000〜", "note": "動画編集・AI向け大容量"},
+                {"name": "DDR4-3600 16GB×2 (32GB)",  "price": "約 ¥42,000〜",  "note": "DDR4プラットフォーム向け"},
             ],
             "gpu_low_vram": [
-                {"name": "NVIDIA RTX 4070 Ti SUPER", "price": "約 ¥130,000〜", "note": "16GB GDDR6X, 4Kゲーム快適"},
-                {"name": "AMD RX 7900 XT",           "price": "約 ¥120,000〜", "note": "20GB VRAM, 4K向け大容量VRAM"},
+                {"name": "AMD RX 9070 XT",    "price": "約 ¥93,000〜",  "note": "16GB, RDNA4ハイクラスのコスパ枠"},
+                {"name": "NVIDIA RTX 5070",   "price": "約 ¥105,000〜", "note": "12GB GDDR7, WQHDゲーム快適"},
             ],
             "gpu_integrated": [
-                {"name": "NVIDIA RTX 4070 Ti SUPER", "price": "約 ¥130,000〜", "note": "16GB GDDR6X, 4K最高設定で快適"},
-                {"name": "NVIDIA RTX 4080 SUPER",    "price": "約 ¥170,000〜", "note": "16GB GDDR6X, 最上位ゲーミング"},
-                {"name": "AMD RX 7900 XTX",          "price": "約 ¥130,000〜", "note": "24GB VRAM, AMD最高峰"},
+                {"name": "AMD RX 9070 XT",      "price": "約 ¥93,000〜",  "note": "16GB, RDNA4ハイクラスのコスパ枠"},
+                {"name": "NVIDIA RTX 5070",     "price": "約 ¥105,000〜", "note": "12GB GDDR7, WQHDゲーム快適"},
+                {"name": "NVIDIA RTX 5070 Ti",  "price": "約 ¥160,000〜", "note": "16GB GDDR7, 4Kゲームも視野"},
             ],
             "storage_hdd": [
-                {"name": "Samsung 990 Pro 2TB (NVMe Gen4)",       "price": "約 ¥22,000〜", "note": "読み取り7450MB/s, 大容量"},
-                {"name": "WD Black SN850X 2TB (NVMe Gen4)",       "price": "約 ¥25,000〜", "note": "高速・大容量プレミアムSSD"},
-                {"name": "Seagate FireCuda 530 2TB (NVMe Gen4)",  "price": "約 ¥23,000〜", "note": "読み取り7300MB/s, 高耐久"},
+                {"name": "WD Black SN850X 2TB (NVMe Gen4)",  "price": "約 ¥80,000〜", "note": "高速・大容量プレミアムSSD"},
+                {"name": "Samsung 990 Pro 2TB (NVMe Gen4)",  "price": "約 ¥91,000〜", "note": "読み取り7450MB/s, 大容量"},
             ],
             "storage_sata": [
-                {"name": "Samsung 990 Pro 2TB (NVMe Gen4)",  "price": "約 ¥22,000〜", "note": "読み取り7450MB/s"},
-                {"name": "WD Black SN850X 2TB (NVMe Gen4)", "price": "約 ¥25,000〜", "note": "PS5互換の高速SSD"},
+                {"name": "WD Black SN850X 2TB (NVMe Gen4)", "price": "約 ¥80,000〜", "note": "PS5互換の高速SSD"},
+                {"name": "Samsung 990 Pro 2TB (NVMe Gen4)", "price": "約 ¥91,000〜", "note": "読み取り7450MB/s"},
             ],
             "storage_small": [
-                {"name": "Samsung 990 Pro 2TB (NVMe Gen4)",  "price": "約 ¥22,000〜", "note": "容量・速度ともにトップクラス"},
-                {"name": "WD Black SN850X 2TB (NVMe Gen4)", "price": "約 ¥25,000〜", "note": "高速・大容量"},
+                {"name": "WD Black SN850X 2TB (NVMe Gen4)", "price": "約 ¥80,000〜", "note": "高速・大容量"},
+                {"name": "Samsung 990 Pro 2TB (NVMe Gen4)", "price": "約 ¥91,000〜", "note": "容量・速度ともにトップクラス"},
             ],
             "display_low_res": [
                 {"name": "LG 32GQ950-B (32型 4K 144Hz)",               "price": "約 ¥90,000〜",  "note": "Nano IPS 4K, ゲーム・クリエイター兼用"},
@@ -352,8 +360,8 @@ PROFILES: dict[str, dict] = {
                 {"name": "QNAP QNA-UC5G1T (USB 5GbE)",       "price": "約 ¥8,000〜",  "note": "USB接続5GbEアダプタ"},
             ],
             "network_wifi": [
-                {"name": "ASUS PCE-AXE68 (PCIe Wi-Fi 6E)",   "price": "約 ¥12,000〜", "note": "最新Wi-Fi 6E, 6GHz帯対応"},
-                {"name": "Intel Wi-Fi 6E AX210 (PCIe)",       "price": "約 ¥4,000〜",  "note": "コスパ良好なWi-Fi 6E"},
+                {"name": "Intel BE200 Wi-Fi 7 (PCIe)",          "price": "約 ¥8,000〜",  "note": "Wi-Fi 7対応, 320MHz幅"},
+                {"name": "TP-Link Archer TBE550E (Wi-Fi 7)",    "price": "約 ¥13,000〜", "note": "Wi-Fi 7+Bluetooth 5.4 PCIeカード"},
             ],
             "motherboard": [
                 {"name": "ASUS ROG STRIX Z790-E GAMING WIFI", "price": "約 ¥65,000〜", "note": "Intel最高峰 Z790, Wi-Fi 6E内蔵"},
@@ -361,16 +369,14 @@ PROFILES: dict[str, dict] = {
                 {"name": "GIGABYTE Z790 AORUS MASTER",         "price": "約 ¥55,000〜", "note": "Z790, 高機能・高耐久"},
             ],
             "gpu_none": [
-                {"name": "NVIDIA RTX 4070 Ti SUPER", "price": "約 ¥130,000〜", "note": "16GB GDDR6X, 4Kゲーム快適"},
-                {"name": "NVIDIA RTX 4080 SUPER",    "price": "約 ¥170,000〜", "note": "16GB GDDR6X, 最上位ゲーミング"},
+                {"name": "AMD RX 9070 XT",     "price": "約 ¥93,000〜",  "note": "16GB, RDNA4ハイクラスのコスパ枠"},
+                {"name": "NVIDIA RTX 5070 Ti", "price": "約 ¥160,000〜", "note": "16GB GDDR7, 4Kゲームも視野"},
             ],
             "ai_accelerator": [
-                {"name": "NVIDIA RTX 4070 Ti SUPER", "price": "約 ¥130,000〜",
-                 "note": "706 TOPS Tensor Core, 4Kゲーム・AI推論を両立"},
-                {"name": "NVIDIA RTX 4080 SUPER",    "price": "約 ¥170,000〜",
-                 "note": "836 TOPS Tensor Core, 最高峰のAI処理性能"},
-                {"name": "Hailo-8 PCIe カード",       "price": "約 ¥30,000〜",
-                 "note": "26 TOPS, 低消費電力の専用AIアクセラレータ"},
+                {"name": "NVIDIA RTX 5070",    "price": "約 ¥105,000〜",
+                 "note": "988 TOPS Tensor Core, WQHDゲーム・AI推論を両立"},
+                {"name": "NVIDIA RTX 5070 Ti", "price": "約 ¥160,000〜",
+                 "note": "1407 TOPS Tensor Core, 最高峰クラスのAI処理性能"},
             ],
         },
     },
@@ -551,6 +557,8 @@ _CHIPSET_SCORES: dict[str, int] = {
     "Z490": 48, "B460": 43, "H470": 43, "H410": 35,
     # Intel 第8-9世代 Coffee Lake (2018-2019)
     "Z390": 38, "B365": 33, "H370": 36, "Z370": 33, "B360": 28,
+    # AMD AM5 800シリーズ (2024-)
+    "X870E": 100, "X870": 95, "B850": 88, "B840": 65,
     # AMD AM5 (2022-)
     "X670E": 100, "X670": 95, "B650E": 90, "B650": 85, "A620": 70,
     # AMD AM4 (2017-2022)

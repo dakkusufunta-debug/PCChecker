@@ -33,7 +33,8 @@ REQUEST_TIMEOUT_SEC = 15
 
 # 新品に絞るための除外ワード(検索クエリ用と商品名の事後フィルタ用)
 NG_KEYWORD = "中古 ジャンク 訳あり"
-USED_MARKERS = ("中古", "ジャンク", "訳あり", "アウトレット", "リファービッシュ")
+USED_MARKERS = ("中古", "ジャンク", "訳あり", "アウトレット", "リファービッシュ",
+                "未使用", "開封品")
 
 _lock = threading.Lock()
 _last_call_at = 0.0
@@ -119,7 +120,7 @@ def _token_pattern(token: str) -> str:
 
 # GPU等の派生グレードを表すサフィックス。キーワード側に無いのに商品名側に
 # 付いている場合は別物(例: RTX 4060 と RTX 4060 Ti)とみなす
-VARIANT_SUFFIXES = ("Ti", "SUPER", "XT", "XTX", "GRE")
+VARIANT_SUFFIXES = ("Ti", "SUPER", "XT", "XTX", "GRE", "F", "X", "X3D", "KF")
 
 
 def matches_model(keyword: str, item_name: str) -> bool:
@@ -160,7 +161,11 @@ def is_new_item(item_name: str) -> bool:
 
 # 本体ではなく付属品・周辺品であることを示すワード
 ACCESSORY_MARKERS = ("保護フィルム", "フィルムのみ", "ブラケット", "ドライバーのみ",
-                     "ACアダプター", "ACアダプタ", "代替電源", "代用", "互換バッテリー")
+                     "ACアダプター", "ACアダプタ", "代替電源", "代用", "互換バッテリー",
+                     # 「ケース」はSSD外付けケース・Pi用ケース等の混入対策。
+                     # 「スタンド」は正規モニターの「スタンド付き」と衝突するため入れない
+                     "ブルーライトカット", "ケース", "壁掛け金具",
+                     "フィルター", "覗き見防止")
 
 # パーツ単体ではなく完成品PC・一体型製品であることを示すワード
 BUNDLE_MARKERS = ("Windows11", "Windows 11", "ノートパソコン", "ノートPC",

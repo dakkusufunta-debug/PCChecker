@@ -159,6 +159,36 @@ class TestSelectBestItem:
             "CFD DDR4-3200 デスクトップ用 8GB 2枚組 288Pin DIMM",
             6000, ref_price=5000)
 
+    def test_cpu_f_variant_is_rejected(self):
+        # 実機検証で混入を確認: i3-14100 の検索に内蔵GPU無しの 14100F が出る
+        assert not matches_model("Intel Core i3-14100", "Intel Core i3-14100F BOX")
+        assert matches_model("Intel Core i5-14400F", "Intel Core i5-14400F デスクトッププロセッサー")
+
+    def test_cpu_x_variant_is_rejected(self):
+        assert not matches_model("AMD Ryzen 5 7600", "AMD Ryzen 5 7600X BOX")
+        assert matches_model("AMD Ryzen 9 9950X", "AMD CPU Ryzen9 9950X AM5")
+
+    def test_open_box_item_is_rejected(self):
+        assert not is_new_item("【未使用】Intel Core i3-14100F Box")
+
+    def test_bluelight_filter_accessory_is_rejected(self):
+        # 実機検証で混入を確認: モニター検索にブルーライトカットフィルターが出る
+        assert not is_valid_item("KOORUI 24E3",
+                                 "KOORUI 24E3 24インチ 向けの ブルーライトカット フィルター",
+                                 6680, ref_price=15000)
+
+    def test_privacy_filter_accessory_is_rejected(self):
+        # 実機検証で混入を確認: 価格下限を超える覗き見防止フィルターが出る
+        assert not is_valid_item("KOORUI 24E3",
+                                 "KOORUI 24E3 24インチ 向けの 覗き見防止 プライバシー フィルター",
+                                 8280, ref_price=15000)
+
+    def test_case_accessory_is_rejected(self):
+        # 実機検証で混入を確認: Hailo-8 M.2 の検索に Raspberry Pi 用ケースが出る
+        assert not is_valid_item("Hailo-8 M.2",
+                                 "Raspberry Pi 5 用 Hailo-8 対応 NVMe M.2 SSD PCIe ミニ PC ケース",
+                                 15299, ref_price=30000)
+
     def test_power_adapter_accessory_is_rejected(self):
         # 実機検証で混入を確認: CPU/SoC検索にミニPC用の代替ACアダプターが出る
         assert not is_valid_item(
