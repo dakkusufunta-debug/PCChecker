@@ -8,6 +8,9 @@ venv/
 # 環境変数(APIキー等)
 .env
 
+# 楽天API価格キャッシュ
+price_cache.json
+
 # ビルド成果物
 build/
 dist/

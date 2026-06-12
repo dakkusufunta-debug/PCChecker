@@ -383,3 +383,47 @@ body {
   .grade-circle { width: 80px; height: 80px; font-size: 2.2rem; }
   .header-title h1 { font-size: 1.3rem; }
 }
+
+/* ----- 楽天価格連携 ----- */
+.upgrade-price.live {
+  color: var(--exceeds);
+  font-weight: 600;
+}
+
+.upgrade-buy {
+  display: inline-block;
+}
+
+.rakuten-btn {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: #bf0000;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.rakuten-btn:hover {
+  opacity: 0.85;
+}
+
+.upgrade-disclaimer {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.footer-credit {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.footer-credit a {
+  color: var(--text-muted);
+  text-decoration: underline;
+}

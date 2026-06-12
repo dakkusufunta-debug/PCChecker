@@ -87,6 +87,53 @@ function _applyProfileDom(key) {
   document.getElementById("profile-desc").textContent = p.description;
   renderOverall(p.overall);
   renderComponents(p.scores);
+  enrichPrices();
+}
+
+// パーツ名 → 価格情報のクライアント側キャッシュ(プロファイル切替時の再取得防止)
+const priceCache = new Map();
+
+// 「約 ¥45,000〜」のようなハードコード価格から数値を取り出す(付属品除外の参考価格用)
+function parseRefPrice(priceText) {
+  const digits = String(priceText || "").replace(/[^\d]/g, "");
+  return digits ? parseInt(digits, 10) : 0;
+}
+
+async function enrichPrices() {
+  const items = document.querySelectorAll(".upgrade-item[data-part]");
+  for (const el of items) {
+    const part = decodeURIComponent(el.dataset.part);
+    const refPrice = parseInt(el.dataset.ref || "0", 10);
+    // 目安価格が数値でない項目(「CPU交換参照」等)は妥当性検証ができないためスキップ
+    if (refPrice <= 0) continue;
+    if (priceCache.has(part)) {
+      applyPrice(el, priceCache.get(part));
+      continue;
+    }
+    try {
+      const res = await fetch(`/api/price?q=${encodeURIComponent(part)}&ref=${refPrice}`);
+      const info = await res.json();
+      priceCache.set(part, info);
+      applyPrice(el, info);
+    } catch (e) {
+      // 取得失敗時はハードコード価格のまま表示を継続
+    }
+  }
+}
+
+function applyPrice(el, info) {
+  if (!info || !info.ok || !el.isConnected) return;
+  const priceEl = el.querySelector(".upgrade-price");
+  if (priceEl && info.price > 0) {
+    priceEl.textContent = `¥${info.price.toLocaleString()}〜`;
+    priceEl.classList.add("live");
+    priceEl.title = "楽天市場の現在の最安値(新品)";
+  }
+  const buyEl = el.querySelector(".upgrade-buy");
+  if (buyEl && info.url) {
+    buyEl.innerHTML =
+      `<a class="rakuten-btn" href="${info.url}" target="_blank" rel="noopener sponsored">楽天で見る</a>`;
+  }
 }
 
 function renderOverall(overall) {
@@ -172,13 +219,15 @@ function buildComponentCard(s) {
         <div class="upgrade-title">🛒 おすすめパーツ</div>
         <div class="upgrade-list">
           ${s.upgrade_options.map(u => `
-            <div class="upgrade-item">
+            <div class="upgrade-item" data-part="${encodeURIComponent(u.name)}" data-ref="${parseRefPrice(u.price)}">
               <span class="upgrade-name">${u.name}</span>
               <span class="upgrade-price">${u.price}</span>
               <span class="upgrade-note">${u.note}</span>
+              <span class="upgrade-buy"></span>
             </div>
           `).join("")}
         </div>
+        <div class="upgrade-disclaimer">実勢価格は楽天市場の検索結果に基づく参考値です(リンクはアフィリエイトを含みます)</div>
        </div>`
     : "";
 

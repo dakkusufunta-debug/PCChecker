@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from pc_analyzer import run_analysis
+from rakuten_client import is_configured, search_part
 
 app = FastAPI(title="PCChecker", version="1.0.0")
 
@@ -44,6 +45,26 @@ async def analyze():
             status_code=500,
             content={"error": str(e), "message": "スペック取得に失敗しました。管理者権限で実行してください。"},
         )
+
+
+@app.get("/api/price", response_class=JSONResponse)
+def price(q: str, ref: int = 0):
+    """パーツ名から楽天市場の実勢価格とアフィリエイトリンクを返す
+
+    同期defで定義しFastAPIのスレッドプールで実行する(rakuten_client側の
+    ロックとレート制限により、同時リクエストはAPI呼び出しとしては直列化される)。
+    """
+    if not q.strip():
+        return JSONResponse(status_code=400, content={"ok": False, "reason": "empty_query"})
+    if not is_configured():
+        return {"ok": False, "reason": "not_configured"}
+    try:
+        result = search_part(q, ref_price=ref or None)
+    except Exception:
+        return {"ok": False, "reason": "error"}
+    if result is None:
+        return {"ok": False, "reason": "no_match"}
+    return {"ok": True, **result}
 
 
 def open_browser():
