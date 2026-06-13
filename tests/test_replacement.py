@@ -77,3 +77,14 @@ class TestIsValidBtoItem:
     def test_out_of_price_range_is_rejected(self):
         assert not is_valid_bto_item(self.KW, "ゲーミングPC RTX 5060 搭載", 80000, 200000)
         assert not is_valid_bto_item(self.KW, "ゲーミングPC RTX 5060 搭載", 600000, 200000)
+
+    KW_NOTE = "ゲーミングノートPC RTX 5060 新品"
+
+    def test_laptop_keyword_accepts_laptop(self):
+        # ノートPC対応: キーワードに「ノート」を含む場合はノートPCを受け入れる
+        assert is_valid_bto_item(
+            self.KW_NOTE, "ゲーミングノートPC 新品 RTX5060 搭載 16インチ", 180000, 200000)
+
+    def test_laptop_keyword_rejects_desktop(self):
+        assert not is_valid_bto_item(
+            self.KW_NOTE, "ゲーミングPC デスクトップ 新品 RTX5060 搭載", 180000, 200000)

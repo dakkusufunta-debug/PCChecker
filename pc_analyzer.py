@@ -149,6 +149,10 @@ PROFILES: dict[str, dict] = {
                 {"name": "DDR4-3200 8GB×2 (16GB)",        "price": "約 ¥18,000〜", "note": "デュアルチャネルで体感向上"},
                 {"name": "DDR5-4800 8GB×2 (16GB)",        "price": "約 ¥30,000〜", "note": "DDR5プラットフォーム向け最小構成"},
             ],
+            "ram_laptop": [
+                {"name": "DDR4-3200 SODIMM 8GB×2 (16GB)",  "price": "約 ¥18,000〜", "note": "ノートPC用・増設可否は機種によります"},
+                {"name": "DDR5-4800 SODIMM 8GB×2 (16GB)",  "price": "約 ¥50,000〜", "note": "DDR5ノート用・増設可否は機種によります"},
+            ],
             "gpu_low_vram": [
                 {"name": "NVIDIA RTX 3050",  "price": "約 ¥30,000〜", "note": "6GB GDDR6, 補助電源不要・軽量ゲーム向け"},
                 {"name": "Intel Arc B580",   "price": "約 ¥56,000〜", "note": "12GB GDDR6, VRAM大容量のエントリー上位"},
@@ -230,6 +234,10 @@ PROFILES: dict[str, dict] = {
                 {"name": "DDR4-3200 8GB×2 (16GB)",  "price": "約 ¥18,000〜", "note": "コスパ重視・デュアルチャネル"},
                 {"name": "DDR4-3600 16GB×2 (32GB)", "price": "約 ¥42,000〜", "note": "将来も余裕のある32GB構成"},
                 {"name": "DDR5-4800 16GB×2 (32GB)", "price": "約 ¥64,000〜", "note": "DDR5プラットフォーム向け"},
+            ],
+            "ram_laptop": [
+                {"name": "DDR4-3200 SODIMM 8GB×2 (16GB)",   "price": "約 ¥18,000〜", "note": "ノートPC用・増設可否は機種によります"},
+                {"name": "DDR5-5600 SODIMM 16GB×2 (32GB)",  "price": "約 ¥85,000〜", "note": "DDR5ノート用32GB構成"},
             ],
             "gpu_low_vram": [
                 {"name": "NVIDIA RTX 5060",   "price": "約 ¥56,000〜", "note": "8GB GDDR7, ミドルスペック定番"},
@@ -320,6 +328,10 @@ PROFILES: dict[str, dict] = {
                 {"name": "DDR5-6000 16GB×2 (32GB)",  "price": "約 ¥70,000〜",  "note": "ゲーム向け高クロック構成"},
                 {"name": "DDR5-6000 32GB×2 (64GB)",  "price": "約 ¥130,000〜", "note": "動画編集・AI向け大容量"},
                 {"name": "DDR4-3600 16GB×2 (32GB)",  "price": "約 ¥42,000〜",  "note": "DDR4プラットフォーム向け"},
+            ],
+            "ram_laptop": [
+                {"name": "DDR5-5600 SODIMM 16GB×2 (32GB)",  "price": "約 ¥85,000〜",  "note": "ノートPC用32GB・増設可否は機種によります"},
+                {"name": "DDR5-5600 SODIMM 32GB×2 (64GB)",  "price": "約 ¥160,000〜", "note": "クリエイター向け大容量ノート用"},
             ],
             "gpu_low_vram": [
                 {"name": "AMD RX 9070 XT",    "price": "約 ¥93,000〜",  "note": "16GB, RDNA4ハイクラスのコスパ枠"},
@@ -458,6 +470,9 @@ class PCSpecs:
     psu_estimated_tdp_w: int = 0
     psu_recommended_w: int = 0
 
+    # 筐体タイプ(ノートPC判定)
+    is_laptop: bool = False
+
 
 # ---------------------------------------------------------------------------
 # ヘルパー関数
@@ -575,6 +590,52 @@ def _extract_chipset(mb_name: str) -> str:
         if chip in name:
             return chip
     return ""
+
+
+def _estimate_platform_score_from_cpu(cpu_name: str) -> int:
+    """CPU名の世代からプラットフォーム年代スコアを推定する
+
+    メーカー製PC(Dell/Lenovo/NEC等)はマザーボード名が社内型番で
+    チップセットを特定できないため、CPU世代を代替指標として使う。
+    スコア感は _CHIPSET_SCORES と揃える(同世代チップセットの中間程度)。
+    返り値 0 は推定不能。
+    """
+    name = cpu_name.lower()
+
+    # Intel Core Ultra (2023〜) = 最新プラットフォーム
+    if "core" in name and "ultra" in name:
+        return 90
+
+    # Intel Core iN-XXXX(X) 形式: 数字部の先頭が世代
+    m = re.search(r"i[3579]-(\d{4,5})", name)
+    if m:
+        digits = m.group(1)
+        gen = int(digits[:2]) if len(digits) == 5 else int(digits[0])
+        if gen >= 14:
+            return 85
+        if gen >= 12:
+            return 75
+        if gen >= 10:
+            return 48
+        if gen >= 8:
+            return 33
+        return 20
+
+    # AMD Ryzen XXXX 形式: 千の位が世代
+    m = re.search(r"ryzen\s*(?:ai\s*)?[3579]?\s*(?:pro\s*)?(\d{4})", name)
+    if m:
+        series = int(m.group(1))
+        if series >= 9000:
+            return 92
+        if series >= 7000:
+            return 85
+        if series >= 5000:
+            return 53
+        if series >= 3000:
+            return 38
+        return 25
+
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -950,6 +1011,19 @@ def collect_specs() -> PCSpecs:
     except Exception:
         pass
 
+    # --- 筐体タイプ(ノートPC判定) ---
+    # ChassisTypes: 8-11=ノート系, 14=サブノート, 30=タブレット,
+    # 31=コンバーチブル, 32=デタッチャブル
+    try:
+        laptop_types = {8, 9, 10, 11, 14, 30, 31, 32}
+        for enclosure in c.Win32_SystemEnclosure():
+            types = enclosure.ChassisTypes or []
+            if any(int(t) in laptop_types for t in types):
+                specs.is_laptop = True
+                break
+    except Exception:
+        pass
+
     # --- AI アクセラレータ ---
     try:
         for device in c.Win32_PnPEntity():
@@ -1127,10 +1201,12 @@ def analyze_ram(specs: PCSpecs, profile: dict) -> ComponentScore:
             f"この基準では {int(std['total_gb'])}GB 以上を推奨します（あと {needed:.0f}GB 必要）。"
         )
         ram_type = specs.ram_type or "DDR4"
+        # ノートPCはSODIMM、デスクトップはDIMMの候補から選ぶ
+        ram_table = opts.get("ram_laptop", opts["ram"]) if specs.is_laptop else opts["ram"]
         if "DDR5" in ram_type:
-            upgrade_options = [o for o in opts["ram"] if "DDR5" in o["name"]]
+            upgrade_options = [o for o in ram_table if "DDR5" in o["name"]]
         else:
-            upgrade_options = [o for o in opts["ram"] if "DDR4" in o["name"]]
+            upgrade_options = [o for o in ram_table if "DDR4" in o["name"]]
 
     if specs.ram_slots_total > 0 and specs.ram_slots_used < specs.ram_slots_total:
         empty = specs.ram_slots_total - specs.ram_slots_used
@@ -1398,6 +1474,24 @@ def analyze_motherboard(specs: PCSpecs, profile: dict) -> ComponentScore:
     chipset = specs.mb_chipset
 
     if not chipset:
+        # メーカー製PCはボード名にチップセットが含まれないため、
+        # CPU世代からプラットフォーム年代を代替推定する
+        estimated = _estimate_platform_score_from_cpu(specs.cpu_name)
+        if estimated > 0:
+            score  = _score(estimated, std["min_chipset_score"])
+            status = _status_from_score(score)
+            if score >= 60:
+                notes = "CPU世代からの推定で、プラットフォームはこの基準を概ね満たしています。"
+            else:
+                notes = "CPU世代からの推定で、プラットフォームがこの基準より古い可能性があります。"
+            return ComponentScore(
+                name="マザーボード",
+                current_value=f"{mb_name} (CPU世代から推定)",
+                midrange_standard=std["label"], status=status, score=score,
+                recommendations=["メーカー製PCのためチップセットを特定できませんでした。"
+                                 "CPU世代に基づく推定評価です。"],
+                notes=notes,
+            )
         return ComponentScore(
             name="マザーボード", current_value=mb_name,
             midrange_standard=std["label"], status="below", score=30,
@@ -1645,6 +1739,57 @@ def calculate_overall(core_scores: list[ComponentScore]) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# ノートPC向けの提案制約
+# ---------------------------------------------------------------------------
+
+# ノートPCに増設可能なUSB接続ネットワークアダプタ
+LAPTOP_NETWORK_WIRED_OPTIONS = [
+    {"name": "TP-Link UE300 (USB 3.0 Gigabit)", "price": "約 ¥1,500〜",
+     "note": "USB接続・ノートPCでもGigabit化"},
+]
+LAPTOP_NETWORK_WIFI_OPTIONS = [
+    {"name": "TP-Link Archer TX20U Plus (USB Wi-Fi 6)", "price": "約 ¥4,000〜",
+     "note": "USB接続・ノートPCでも増設可能"},
+]
+
+
+def _apply_laptop_constraints(scores: list[ComponentScore]) -> None:
+    """ノートPCで物理的に交換できないパーツの提案を抑制・差し替えする
+
+    対象: GPU増設・マザーボード交換は不可。PCIe接続のネットワークカードは
+    USB接続品に差し替え。ストレージ換装は可能だが機種依存の注意を付す。
+    """
+    for s in scores:
+        if s.name == "GPU":
+            s.upgrade_options = []
+            if s.status == "below":
+                s.recommendations = [
+                    "ノートPCのGPUは交換できません。GPU性能が必要な場合は、"
+                    "外付けGPU(eGPU)対応機種の確認、または買い替えをご検討ください。"
+                ]
+        elif s.name == "マザーボード":
+            s.upgrade_options = []
+            if s.status == "below":
+                s.recommendations = [
+                    "ノートPCのマザーボード(プラットフォーム)は交換できません。"
+                    "世代が古い場合は買い替えが現実的な選択肢です。"
+                ]
+        elif s.name == "ネットワーク":
+            if s.upgrade_options:
+                replaced: list[dict] = []
+                if any("有線" in r for r in s.recommendations):
+                    replaced.extend(LAPTOP_NETWORK_WIRED_OPTIONS)
+                if any("Wi-Fi" in r for r in s.recommendations):
+                    replaced.extend(LAPTOP_NETWORK_WIFI_OPTIONS)
+                s.upgrade_options = replaced
+        elif s.name == "ストレージ":
+            if s.upgrade_options:
+                s.recommendations.append(
+                    "※ ノートPCの換装可否(M.2スロットの有無・サイズ)は機種により異なります。"
+                )
+
+
+# ---------------------------------------------------------------------------
 # 買い替え vs アップグレード判定
 # ---------------------------------------------------------------------------
 
@@ -1667,9 +1812,28 @@ BTO_SUGGESTIONS: dict[str, dict] = {
     },
 }
 
+# ノートPC向けの買い替え候補キーワード
+BTO_SUGGESTIONS_LAPTOP: dict[str, dict] = {
+    "low": {
+        "keyword": "ノートパソコン 新品 16GB SSD",
+        "ref_price": 90000,
+        "label": "普段使い向けの新品ノートPC",
+    },
+    "mid": {
+        "keyword": "ゲーミングノートPC RTX 5060 新品",
+        "ref_price": 200000,
+        "label": "RTX 5060クラス搭載のゲーミングノートPC",
+    },
+    "high": {
+        "keyword": "ゲーミングノートPC RTX 5070 新品",
+        "ref_price": 320000,
+        "label": "RTX 5070クラス搭載のハイエンドゲーミングノートPC",
+    },
+}
+
 
 def judge_replacement(profile_key: str, core_scores: list[ComponentScore],
-                      mb_score: ComponentScore) -> dict:
+                      mb_score: ComponentScore, is_laptop: bool = False) -> dict:
     """部分アップグレードで延命するか、買い替えるべきかを判定する
 
     考え方: CPU・マザーボード(プラットフォーム)の交換が必要になると、
@@ -1679,6 +1843,7 @@ def judge_replacement(profile_key: str, core_scores: list[ComponentScore],
     below = [s.name for s in core_scores if s.status == "below"]
     platform_old = mb_score.status == "below"
     cpu_below = any(s.name == "CPU" and s.status == "below" for s in core_scores)
+    gpu_below = any(s.name == "GPU" and s.status == "below" for s in core_scores)
 
     reasons: list[str] = []
     if platform_old:
@@ -1688,7 +1853,19 @@ def judge_replacement(profile_key: str, core_scores: list[ComponentScore],
         reasons.append(f"基準以下のコアコンポーネントが {len(below)} 種あります"
                        f"({'・'.join(below)})。")
 
-    if platform_old and (len(below) >= 3 or (cpu_below and len(below) >= 2)):
+    if is_laptop and (cpu_below or gpu_below):
+        # ノートPCはCPU・GPUを交換できないため、不足していれば買い替え一択に近い
+        reasons.append("ノートPCはCPU・GPU・マザーボードを交換できないため、"
+                       "パーツ交換で改善できる余地が限られます。")
+        if len(below) >= 2:
+            verdict = "replace"
+            summary = ("ノートPCでは交換できないコンポーネントが基準を下回っています。"
+                       "性能を改善するには買い替えが現実的です。")
+        else:
+            verdict = "consider"
+            summary = ("ノートPCのため交換による改善余地が限られます。"
+                       "用途に支障がある場合は買い替えをご検討ください。")
+    elif platform_old and (len(below) >= 3 or (cpu_below and len(below) >= 2)):
         verdict = "replace"
         summary = ("プラットフォーム一新を含む大規模な交換が必要なため、"
                    "パーツ単位の延命より新しいPCへの買い替えのほうが割安になる可能性が高いです。")
@@ -1707,11 +1884,12 @@ def judge_replacement(profile_key: str, core_scores: list[ComponentScore],
         if not below:
             reasons = ["コアコンポーネントはこの基準を満たしています。"]
 
+    bto_table = BTO_SUGGESTIONS_LAPTOP if is_laptop else BTO_SUGGESTIONS
     return {
         "verdict": verdict,            # "upgrade" | "consider" | "replace"
         "summary": summary,
         "reasons": reasons,
-        "bto": BTO_SUGGESTIONS.get(profile_key),
+        "bto": bto_table.get(profile_key),
     }
 
 
@@ -1751,14 +1929,20 @@ def run_analysis() -> dict:
             mb_score,
             analyze_ai_accelerator(specs, profile),
             system_health_score,
-            psu_score,
         ]
+        # ノートPCでは電源ユニットの交換概念がないためPSUカードは出さない
+        if not specs.is_laptop:
+            extra_scores.append(psu_score)
+
+        if specs.is_laptop:
+            _apply_laptop_constraints(core_scores + extra_scores)
+
         profiles_result[key] = {
             "label":       profile["label"],
             "description": profile["description"],
             "scores":      [_score_to_dict(s) for s in core_scores + extra_scores],
             "overall":     calculate_overall(core_scores),
-            "replacement": judge_replacement(key, core_scores, mb_score),
+            "replacement": judge_replacement(key, core_scores, mb_score, specs.is_laptop),
         }
 
     return {
@@ -1804,6 +1988,8 @@ def run_analysis() -> dict:
             # PSU 推定
             "psu_estimated_tdp_w":   specs.psu_estimated_tdp_w,
             "psu_recommended_w":     specs.psu_recommended_w,
+            # 筐体タイプ
+            "is_laptop":             specs.is_laptop,
         },
         "profiles":        profiles_result,
         "default_profile": DEFAULT_PROFILE,

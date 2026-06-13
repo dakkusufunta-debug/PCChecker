@@ -226,6 +226,7 @@ function renderOverall(overall) {
 function renderSysinfo(specs) {
   const items = [
     { label: "OS",             value: specs.os_name || "不明" },
+    { label: "筐体",           value: specs.is_laptop ? "ノートPC" : "デスクトップ" },
     { label: "CPU",            value: specs.cpu_name || "不明" },
     { label: "コア / スレッド", value: `${specs.cpu_cores}コア / ${specs.cpu_threads}スレッド` },
     { label: "クロック",        value: specs.cpu_base_ghz ? `${specs.cpu_base_ghz} GHz (base)` : "不明" },

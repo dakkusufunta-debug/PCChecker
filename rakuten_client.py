@@ -34,7 +34,7 @@ REQUEST_TIMEOUT_SEC = 15
 # 新品に絞るための除外ワード(検索クエリ用と商品名の事後フィルタ用)
 NG_KEYWORD = "中古 ジャンク 訳あり"
 USED_MARKERS = ("中古", "ジャンク", "訳あり", "アウトレット", "リファービッシュ",
-                "未使用", "開封品")
+                "未使用", "開封品", "整備済")
 
 _lock = threading.Lock()
 _last_call_at = 0.0
@@ -171,8 +171,13 @@ ACCESSORY_MARKERS = ("保護フィルム", "フィルムのみ", "ブラケッ�
 BUNDLE_MARKERS = ("Windows11", "Windows 11", "ノートパソコン", "ノートPC",
                   "デスクトップパソコン", "ミニPC", "一体型", "ゲーミングPC")
 
-# デスクトップ用RAM検索に混入するノートPC用RAMの目印
-SODIMM_MARKERS = ("SODIMM", "S.O.DIMM", "SO-DIMM", "260Pin", "260P", "ノート")
+# ノートPC用RAMの目印(260Pin=DDR4 SODIMM, 262Pin=DDR5 SODIMM)
+SODIMM_MARKERS = ("SODIMM", "S.O.DIMM", "SO-DIMM", "260Pin", "260P",
+                  "262Pin", "262P", "ノート")
+
+# デスクトップ用DIMMの明示マーカー(288Pin)。SODIMM検索時の混入対策。
+# カタカナ表記(288ピン)の出品も多い
+DESKTOP_DIMM_MARKERS = ("288Pin", "288P", "288pin", "288ピン")
 
 # 参考価格に対してこの比率を下回る商品は付属品・別物とみなす
 MIN_PRICE_RATIO = 0.4
@@ -191,12 +196,27 @@ def is_valid_item(keyword: str, item_name: str, price: int,
         return False
     if any(marker in item_name for marker in ACCESSORY_MARKERS):
         return False
-    if any(marker in item_name for marker in BUNDLE_MARKERS):
+    # SODIMM(ノートPC用パーツ)検索では「ノートPC用メモリ」等の表記が正当なため、
+    # ノート系の完成品マーカーは除外対象から外す
+    kw_upper = keyword.upper()
+    kw_wants_sodimm = ("DDR" in kw_upper
+                       and "SODIMM" in kw_upper.replace("-", "").replace(".", ""))
+    bundle_markers = (
+        tuple(m for m in BUNDLE_MARKERS if "ノート" not in m)
+        if kw_wants_sodimm else BUNDLE_MARKERS
+    )
+    if any(marker in item_name for marker in bundle_markers):
         return False
-    # デスクトップ用メモリの検索ではノート用(SODIMM)を除外
-    if "DDR" in keyword.upper():
-        upper = item_name.upper()
-        if any(m.upper() in upper for m in SODIMM_MARKERS):
+    # メモリ検索ではデスクトップ用(DIMM)とノート用(SODIMM)を相互に区別する。
+    # キーワードに SODIMM を含む場合はノート用のみ、含まない場合はデスクトップ用のみ
+    if "DDR" in kw_upper:
+        item_upper = item_name.upper()
+        item_is_sodimm = any(m.upper() in item_upper for m in SODIMM_MARKERS)
+        if kw_wants_sodimm != item_is_sodimm:
+            return False
+        # 「SODIMM」表記がありつつ288Pin(デスクトップ用)と明記された商品を弾く
+        if kw_wants_sodimm and any(m.upper() in item_upper
+                                   for m in DESKTOP_DIMM_MARKERS):
             return False
     # 参考価格よりはるかに安い商品は保護フィルム等の付属品の可能性が高い
     if ref_price and ref_price > 0 and price < ref_price * MIN_PRICE_RATIO:
@@ -348,8 +368,8 @@ def is_valid_bto_item(keyword: str, item_name: str, price: int,
         return False
     if any(marker in item_name for marker in ACCESSORY_MARKERS):
         return False
-    # ノートPCは別カテゴリのため除外(デスクトップの買い替え提案)
-    if "ノート" in item_name:
+    # キーワードに「ノート」を含む場合はノートPCのみ、含まない場合はデスクトップのみ
+    if ("ノート" in keyword) != ("ノート" in item_name):
         return False
     if not matches_model(keyword, item_name):
         return False
@@ -371,6 +391,16 @@ def search_bto(keyword: str, ref_price: int) -> list[dict]:
 
         try:
             items = _call_api(norm)
+            # 安い順の上位が中古・整備済品で埋まり全滅する場合があるため、
+            # 関連度順でも検索して候補を広げる
+            valid_in_cheapest = [
+                i for i in items
+                if is_valid_bto_item(norm, i.get("itemName", ""),
+                                     int(i.get("itemPrice", 0)), ref_price)
+            ]
+            if not valid_in_cheapest:
+                items = _call_api(norm, sort="standard")
+                items.sort(key=lambda i: int(i.get("itemPrice", 0)))
         except (urllib.error.URLError, urllib.error.HTTPError, OSError,
                 json.JSONDecodeError):
             return []

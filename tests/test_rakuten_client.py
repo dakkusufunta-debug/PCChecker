@@ -148,6 +148,39 @@ class TestSelectBestItem:
     def test_ref_price_zero_means_no_floor(self):
         assert is_valid_item("ASUS VA24DQF", "ASUS VA24DQF モニター", 1000, ref_price=None)
 
+    def test_sodimm_keyword_requires_sodimm_item(self):
+        # ノートPC対応: SODIMM指定の検索ではノート用のみを受け入れる
+        assert is_valid_item(
+            "DDR4-3200 SODIMM 8GB 2枚",
+            "シリコンパワー ノートPC用メモリ DDR4-3200 8GB×2枚 260Pin SODIMM",
+            18980, ref_price=18000)
+        assert not is_valid_item(
+            "DDR4-3200 SODIMM 8GB 2枚",
+            "CFD DDR4-3200 デスクトップ用 8GB 2枚組 288Pin DIMM",
+            18000, ref_price=18000)
+
+    def test_sodimm_keyword_rejects_288pin_desktop_dimm(self):
+        # 実機検証で混入を確認: SODIMM検索に288Pin(デスクトップ用)が出る
+        assert not is_valid_item(
+            "DDR5-5600 SODIMM 16GB 2枚",
+            "シリコンパワー ddr5-5600 32GB(16GB×2枚) ノートPC対応 288Pin",
+            78980, ref_price=65000)
+        # カタカナ表記「288ピン」も同様に弾く(SODIMM表記と矛盾する出品)
+        assert not is_valid_item(
+            "DDR5-5600 SODIMM 16GB 2枚",
+            "シリコンパワー ddr5-5600 32GB(16GB×2枚) 288ピン CL46 SODIMM",
+            78980, ref_price=65000)
+
+    def test_ddr5_sodimm_262pin_is_accepted(self):
+        assert is_valid_item(
+            "DDR5-4800 SODIMM 16GB 2枚",
+            "プリンストン 32GB（16GB 2枚組） DDR5-4800 262Pin SODIMM",
+            120694, ref_price=65000)
+
+    def test_refurbished_item_is_rejected(self):
+        # 実機検証で混入を確認: 低価格帯ノートPCは整備済品が安値上位を占める
+        assert not is_new_item("【整備済み品】ノートパソコン Core i5 16GB SSD512GB")
+
     def test_sodimm_is_rejected_for_ram_search(self):
         # 実機検証で混入を確認: デスクトップ用RAM検索にノート用(260Pin SODIMM)が出る
         assert not is_valid_item(
