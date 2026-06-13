@@ -1789,6 +1789,20 @@ def _apply_laptop_constraints(scores: list[ComponentScore]) -> None:
                 )
 
 
+def _apply_desktop_notes(scores: list[ComponentScore]) -> None:
+    """デスクトップPC向けの注意書きを付す
+
+    スリム型・省スペース筐体(メーカー製に多い)はWMIから判別できないため、
+    GPU増設の提案には物理サイズ・電源容量の確認を促す注記を常に添える。
+    """
+    for s in scores:
+        if s.name == "GPU" and s.upgrade_options:
+            s.recommendations.append(
+                "※ スリム型・省スペース筐体ではカードサイズ(ロープロファイル対応)と"
+                "電源容量をご確認ください。"
+            )
+
+
 # ---------------------------------------------------------------------------
 # 買い替え vs アップグレード判定
 # ---------------------------------------------------------------------------
@@ -1936,6 +1950,8 @@ def run_analysis() -> dict:
 
         if specs.is_laptop:
             _apply_laptop_constraints(core_scores + extra_scores)
+        else:
+            _apply_desktop_notes(core_scores + extra_scores)
 
         profiles_result[key] = {
             "label":       profile["label"],

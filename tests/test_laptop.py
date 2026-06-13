@@ -4,6 +4,7 @@ from pc_analyzer import (
     PROFILES,
     ComponentScore,
     PCSpecs,
+    _apply_desktop_notes,
     _apply_laptop_constraints,
     _estimate_platform_score_from_cpu,
     analyze_motherboard,
@@ -135,6 +136,31 @@ class TestLaptopConstraints:
         gpu = _score("GPU", "meets")
         _apply_laptop_constraints([gpu])
         assert gpu.recommendations == []
+
+
+# ---------------------------------------------------------------------------
+# デスクトップPCの注記(スリム型・省スペース筐体向け)
+# ---------------------------------------------------------------------------
+
+class TestDesktopNotes:
+    def test_gpu_with_options_gets_slim_case_note(self):
+        gpu = _score("GPU", "below",
+                     recommendations=["VRAMが不足しています。"],
+                     upgrade_options=[{"name": "RTX 5060"}])
+        _apply_desktop_notes([gpu])
+        assert gpu.upgrade_options          # 提案自体は維持される
+        assert any("スリム型" in r for r in gpu.recommendations)
+
+    def test_gpu_without_options_is_untouched(self):
+        gpu = _score("GPU", "meets")
+        _apply_desktop_notes([gpu])
+        assert gpu.recommendations == []
+
+    def test_other_components_are_untouched(self):
+        st = _score("ストレージ", "below",
+                    upgrade_options=[{"name": "Crucial P3 Plus 1TB"}])
+        _apply_desktop_notes([st])
+        assert st.recommendations == []
 
 
 # ---------------------------------------------------------------------------
