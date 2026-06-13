@@ -12,10 +12,12 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from app_paths import data_dir, is_frozen, resource_dir
 from pc_analyzer import run_analysis
-from rakuten_client import is_configured, search_bto, search_part
+from rakuten_client import is_available, search_bto, search_part
+from feedback_client import submit_feedback
 
 app = FastAPI(title="PCChecker", version="1.0.0")
 
@@ -58,7 +60,7 @@ def price(q: str, ref: int = 0):
     """
     if not q.strip():
         return JSONResponse(status_code=400, content={"ok": False, "reason": "empty_query"})
-    if not is_configured():
+    if not is_available():
         return {"ok": False, "reason": "not_configured"}
     try:
         result = search_part(q, ref_price=ref or None)
@@ -74,13 +76,31 @@ def bto(q: str, ref: int):
     """買い替え候補のBTO PC(最大3件)を楽天市場から返す"""
     if not q.strip() or ref <= 0:
         return JSONResponse(status_code=400, content={"ok": False, "reason": "bad_request"})
-    if not is_configured():
+    if not is_available():
         return {"ok": False, "reason": "not_configured"}
     try:
         items = search_bto(q, ref_price=ref)
     except Exception:
         return {"ok": False, "reason": "error"}
     return {"ok": True, "items": items}
+
+
+class FeedbackIn(BaseModel):
+    category: str
+    comment: str
+    include_diagnostics: bool = False
+    diagnostics: dict | None = None
+
+
+@app.post("/api/feedback", response_class=JSONResponse)
+def feedback(body: FeedbackIn):
+    """アプリ内フィードバック(不具合報告・要望)を送信先へ転送する"""
+    # 添付しない指定なら診断データは送らない
+    diag = body.diagnostics if body.include_diagnostics else None
+    try:
+        return submit_feedback(body.category, body.comment, diag)
+    except Exception:
+        return {"ok": False, "reason": "error"}
 
 
 PREFERRED_PORT = 8000

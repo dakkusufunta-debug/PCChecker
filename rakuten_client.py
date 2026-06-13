@@ -13,6 +13,7 @@
 """
 
 import json
+import os
 import re
 import threading
 import time
@@ -38,6 +39,24 @@ USED_MARKERS = ("中古", "ジャンク", "訳あり", "アウトレット", "�
 _lock = threading.Lock()
 _last_call_at = 0.0
 
+# ---------------------------------------------------------------------------
+# リモート価格キャッシュ(配布版用)
+# ---------------------------------------------------------------------------
+# 配布されたexeはユーザーPCから楽天API(IP許可制)を直接叩けず、秘密鍵も
+# 同梱できない。そこで固定IPの中継サーバーが日次生成した価格キャッシュを
+# CDN(Cloudflare)経由で配信し、exeはそれを参照する。
+# URLは環境変数 PCCHECKER_CACHE_URL で上書き可能(検証・移行用)。
+REMOTE_CACHE_URL = os.environ.get(
+    "PCCHECKER_CACHE_URL",
+    "https://pcchecker-cache.pages.dev/price_cache.json",
+)
+REMOTE_CACHE_PATH = data_dir() / "remote_cache.json"
+REMOTE_REFETCH_SEC = 12 * 60 * 60  # ローカルに落としたリモートキャッシュの再取得間隔
+
+_remote_lock = threading.Lock()
+_remote_mem: dict | None = None    # プロセス内にメモ化したリモートキャッシュ本体
+_remote_mem_at = 0.0
+
 
 # ---------------------------------------------------------------------------
 # 認証情報
@@ -62,6 +81,74 @@ def is_configured() -> bool:
     access_key = creds.get("RAKUTEN_ACCESS_KEY", "")
     return bool(app_id and access_key
                 and "ここに" not in app_id and "ここに" not in access_key)
+
+
+def is_available() -> bool:
+    """価格取得が可能か(ローカル鍵あり、またはリモートキャッシュURL設定済み)"""
+    return is_configured() or bool(REMOTE_CACHE_URL)
+
+
+# ---------------------------------------------------------------------------
+# リモート価格キャッシュの取得(配布版は楽天直叩きの代わりにこれを使う)
+# ---------------------------------------------------------------------------
+
+def _http_get_json(url: str) -> dict:
+    """URLからJSONを取得して返す(失敗時は例外送出)。テストで差し替え可能。"""
+    req = urllib.request.Request(url, headers={"User-Agent": "PCChecker"})
+    with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SEC) as res:
+        return json.loads(res.read().decode("utf-8"))
+
+
+def _load_remote_cache(now: float | None = None) -> dict:
+    """中継サーバーの価格キャッシュを取得する(プロセス内メモ + ローカルファイル)
+
+    再取得間隔内ならメモ/ローカルファイルを再利用し、過ぎていればCDNから
+    取り直す。通信失敗時は、期限切れでもローカルの古いキャッシュがあれば
+    それを使う。どこからも取れなければ空dict(=全件ハードコード価格へ
+    フォールバック)を返す。
+    """
+    global _remote_mem, _remote_mem_at
+    t = now if now is not None else time.time()
+    with _remote_lock:
+        if _remote_mem is not None and t - _remote_mem_at < REMOTE_REFETCH_SEC:
+            return _remote_mem
+
+        # ローカルに保存済みのリモートキャッシュ(再取得間隔内ならそのまま使う)
+        local: dict | None = None
+        try:
+            local = json.loads(REMOTE_CACHE_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            local = None
+        if local is not None and t - local.get("_fetched_at", 0) < REMOTE_REFETCH_SEC:
+            _remote_mem, _remote_mem_at = local, t
+            return local
+
+        # CDNから再取得
+        try:
+            data = _http_get_json(REMOTE_CACHE_URL)
+            data["_fetched_at"] = t
+            try:
+                REMOTE_CACHE_PATH.write_text(
+                    json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            except Exception:
+                pass  # 書き込み不可でもメモ上のキャッシュで動作継続
+            _remote_mem, _remote_mem_at = data, t
+            return data
+        except Exception:
+            # 通信失敗: 期限切れでもローカルがあれば使う。無ければ空dict。
+            fallback = local if local is not None else {}
+            _remote_mem, _remote_mem_at = fallback, t
+            return fallback
+
+
+def _remote_price(keyword: str) -> dict | None:
+    """リモートキャッシュから正規化済みキーワードの価格情報を引く"""
+    return _load_remote_cache().get("prices", {}).get(keyword)
+
+
+def _remote_bto(keyword: str) -> list[dict]:
+    """リモートキャッシュから正規化済みキーワードのBTO候補を引く"""
+    return _load_remote_cache().get("bto", {}).get(keyword) or []
 
 
 # ---------------------------------------------------------------------------
@@ -308,6 +395,10 @@ def search_part(part_name: str, ref_price: int | None = None) -> dict | None:
     """
     keyword = normalize_keyword(part_name)
 
+    # 配布版(ローカル鍵なし): 中継サーバーの日次キャッシュを参照する
+    if not is_configured():
+        return _remote_price(keyword)
+
     with _lock:
         cache = _load_cache()
         entry = cache_get(cache, keyword)
@@ -381,6 +472,10 @@ def search_bto(keyword: str, ref_price: int) -> list[dict]:
     """買い替え候補のBTO PCを最大3件返す(安い順、キャッシュつき)"""
     norm = normalize_keyword(keyword)
     cache_key = f"bto:{norm}"
+
+    # 配布版(ローカル鍵なし): 中継サーバーの日次キャッシュを参照する
+    if not is_configured():
+        return _remote_bto(norm)
 
     with _lock:
         cache = _load_cache()

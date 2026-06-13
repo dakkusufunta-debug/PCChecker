@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PCChecker - PC診断・アップグレード提案</title>
   <link rel="icon" href="/static/icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="/static/css/style.css?v=20260613-5" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260613-6" />
 </head>
 <body>
   <header class="header">
@@ -125,6 +125,39 @@
         </button>
       </div>
     </section>
+
+    <!-- フィードバック -->
+    <section id="feedback-section" class="card feedback-card">
+      <h2 class="section-title">フィードバックを送る</h2>
+      <p class="feedback-intro">不具合のご報告・ご要望をお寄せください。今後の改善の参考にさせていただきます。</p>
+      <div class="feedback-form">
+        <label class="feedback-label" for="feedback-category">種類</label>
+        <select id="feedback-category" class="feedback-select">
+          <option value="bug">不具合の報告</option>
+          <option value="request">機能の要望</option>
+          <option value="other">その他</option>
+        </select>
+
+        <label class="feedback-label" for="feedback-comment">内容</label>
+        <textarea id="feedback-comment" class="feedback-textarea" rows="4" maxlength="2000"
+          placeholder="例: ○○のスペックが正しく表示されません / △△の機能がほしいです"></textarea>
+
+        <label class="feedback-check">
+          <input type="checkbox" id="feedback-include-diag" checked />
+          診断結果(スペック・スコア)を添付する（不具合の再現に役立ちます）
+        </label>
+        <p class="feedback-note">
+          添付されるのはハードウェア構成と診断スコアのみで、氏名・PC名などの個人情報は含まれません。
+          <a href="#" id="feedback-preview-toggle">送信内容を確認</a>
+        </p>
+        <pre id="feedback-preview" class="feedback-preview hidden"></pre>
+
+        <div class="feedback-actions">
+          <button id="feedback-submit" class="btn btn-primary" onclick="submitFeedback()">送信する</button>
+          <span id="feedback-status" class="feedback-status"></span>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -132,6 +165,6 @@
     <p class="footer-credit">価格・商品情報は楽天市場から取得した参考値です(Supported by <a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener">Rakuten Developers</a>)。掲載リンクには成果報酬型(アフィリエイト)リンクが含まれます。</p>
   </footer>
 
-  <script src="/static/js/app.js?v=20260613-5"></script>
+  <script src="/static/js/app.js?v=20260613-6"></script>
 </body>
 </html>

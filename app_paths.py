@@ -17,6 +17,7 @@ from pathlib import Path
 _MODULE_DIR = Path(__file__).parent
 
 APP_NAME = "PCChecker"
+APP_VERSION = "1.0.0"
 
 
 def is_frozen() -> bool:

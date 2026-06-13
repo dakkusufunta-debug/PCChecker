@@ -34,6 +34,7 @@ function renderResult(data) {
 
   renderSysinfo(data.specs);
   setupProfileTabs();
+  refreshFeedbackDiagState();
 
   // 初回描画（アニメーションなし）
   _applyProfileDom(currentProfile);
@@ -446,3 +447,125 @@ function showError(msg) {
 
 function show(id) { document.getElementById(id).classList.remove("hidden"); }
 function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+// ---------------------------------------------------------------------------
+// フィードバック送信
+// ---------------------------------------------------------------------------
+
+// 診断結果から、不具合再現に役立つ要約を組み立てる(個人情報は含めない)。
+// 静的なカタログ(upgrade_options 等)は省き、スペックとスコアのみ送る。
+function buildDiagnostics() {
+  if (!currentData) return null;
+  const profiles = {};
+  for (const [key, p] of Object.entries(currentData.profiles || {})) {
+    profiles[key] = {
+      overall: { grade: p.overall.grade, score: p.overall.score },
+      verdict: p.replacement ? p.replacement.verdict : null,
+      scores: (p.scores || []).map(s => ({
+        name: s.name, status: s.status, score: s.score,
+        current_value: s.current_value,
+      })),
+    };
+  }
+  return {
+    specs: currentData.specs,
+    profiles,
+    default_profile: currentData.default_profile,
+  };
+}
+
+// 送信内容のプレビュー表示をトグルする
+function setupFeedbackPreview() {
+  const toggle = document.getElementById("feedback-preview-toggle");
+  if (!toggle) return;
+  toggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    const pre = document.getElementById("feedback-preview");
+    if (!pre.classList.contains("hidden")) {
+      pre.classList.add("hidden");
+      return;
+    }
+    const diag = document.getElementById("feedback-include-diag").checked
+      ? buildDiagnostics() : null;
+    const payload = {
+      category: document.getElementById("feedback-category").value,
+      comment: document.getElementById("feedback-comment").value.trim(),
+      include_diagnostics: !!diag,
+      diagnostics: diag,
+    };
+    pre.textContent = JSON.stringify(payload, null, 2);
+    pre.classList.remove("hidden");
+  });
+}
+
+async function submitFeedback() {
+  const btn = document.getElementById("feedback-submit");
+  const statusEl = document.getElementById("feedback-status");
+  const comment = document.getElementById("feedback-comment").value.trim();
+
+  if (!comment) {
+    statusEl.textContent = "内容を入力してください。";
+    statusEl.className = "feedback-status error";
+    return;
+  }
+
+  const include = document.getElementById("feedback-include-diag").checked;
+  const diagnostics = include ? buildDiagnostics() : null;
+  const payload = {
+    category: document.getElementById("feedback-category").value,
+    comment,
+    include_diagnostics: !!diagnostics,
+    diagnostics,
+  };
+
+  btn.disabled = true;
+  statusEl.textContent = "送信中...";
+  statusEl.className = "feedback-status";
+  try {
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      statusEl.textContent = "送信しました。ありがとうございます！";
+      statusEl.className = "feedback-status success";
+      document.getElementById("feedback-comment").value = "";
+      document.getElementById("feedback-preview").classList.add("hidden");
+    } else {
+      const reasons = {
+        not_configured: "現在フィードバックを受け付けていません。",
+        empty_comment: "内容を入力してください。",
+        bad_category: "種類の指定が不正です。",
+        network_error: "送信に失敗しました。通信環境をご確認ください。",
+        server_error: "サーバー側で問題が発生しました。時間をおいて再度お試しください。",
+      };
+      statusEl.textContent = reasons[data.reason] || "送信に失敗しました。";
+      statusEl.className = "feedback-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "送信に失敗しました: " + e.message;
+    statusEl.className = "feedback-status error";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// 診断未実施なら診断添付チェックを無効化する
+function refreshFeedbackDiagState() {
+  const chk = document.getElementById("feedback-include-diag");
+  if (!chk) return;
+  if (!currentData) {
+    chk.checked = false;
+    chk.disabled = true;
+    chk.closest(".feedback-check").title = "分析を実行すると添付できます";
+  } else {
+    chk.disabled = false;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupFeedbackPreview();
+  refreshFeedbackDiagState();
+});

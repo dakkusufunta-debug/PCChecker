@@ -483,3 +483,85 @@ body {
   border-color: var(--accent);
   transform: translateY(-1px);
 }
+
+/* ---------------------------------------------------------------------------
+   フィードバック
+--------------------------------------------------------------------------- */
+.feedback-card {
+  margin-top: 18px;
+}
+.feedback-intro {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 4px 0 14px;
+}
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.feedback-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.feedback-select,
+.feedback-textarea {
+  background: var(--bg2);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 9px 11px;
+  font: inherit;
+  width: 100%;
+}
+.feedback-textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+.feedback-select:focus,
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.feedback-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--text);
+  margin-top: 6px;
+  cursor: pointer;
+}
+.feedback-check input { margin-top: 2px; }
+.feedback-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+  line-height: 1.5;
+}
+.feedback-note a { color: var(--accent2); }
+.feedback-preview {
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.feedback-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.feedback-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.feedback-status.success { color: var(--exceeds); }
+.feedback-status.error { color: var(--below); }
