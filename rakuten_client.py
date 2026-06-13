@@ -19,13 +19,12 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from pathlib import Path
+from app_paths import data_dir, env_path
 
 API_URL = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601"
 
-BASE_DIR = Path(__file__).parent
-ENV_PATH = BASE_DIR / ".env"
-CACHE_PATH = BASE_DIR / "price_cache.json"
+ENV_PATH = env_path()
+CACHE_PATH = data_dir() / "price_cache.json"
 
 CACHE_TTL_SEC = 12 * 60 * 60   # 価格キャッシュの有効期間: 12時間
 MIN_INTERVAL_SEC = 1.1         # API呼び出しの最小間隔(レート制限対策)

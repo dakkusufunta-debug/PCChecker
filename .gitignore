@@ -15,6 +15,8 @@ price_cache.json
 build/
 dist/
 *.spec
+# ビルド定義はバージョン管理する
+!PCChecker.spec
 
 # OS
 Thumbs.db

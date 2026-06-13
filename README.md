@@ -35,6 +35,22 @@ pip install -r requirements-dev.txt
 python -m pytest tests -q
 ```
 
+## exe ビルド(配布用)
+
+単一ファイルの Windows 実行ファイル(ウィンドウなし・起動するとブラウザが自動で開く)を生成します。
+
+```powershell
+pip install -r requirements-dev.txt
+python scripts/make_icon.py              # static/icon.ico を生成
+python -m PyInstaller PCChecker.spec --noconfirm
+```
+
+出力: `dist/PCChecker.exe`
+
+- ビルド定義は `PCChecker.spec`、アイコンは `static/icon.ico`。
+- exe 実行時のログは `%LOCALAPPDATA%\PCChecker\pcchecker.log`。
+- 楽天価格連携を使う場合は `.env`(`.env.example` 参照)を exe と同じフォルダに置きます。秘密鍵を含むため配布物には同梱しないでください。
+
 ## 免責事項
 
 本アプリの診断結果・推定値(ストレージ寿命、PSU容量、パーツ価格など)はあくまで目安であり、動作や寿命を保証するものではありません。パーツの購入・交換はご自身の責任で行ってください。
