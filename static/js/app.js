@@ -2,10 +2,111 @@ const ICONS = {
   CPU: "⚡", RAM: "🧠", GPU: "🎮", "ストレージ": "💾",
   "ディスプレイ": "🖥️", "ネットワーク": "🌐", "マザーボード": "📋",
 };
-const STATUS_LABEL = { below: "基準以下", meets: "この基準OK", exceeds: "基準超え" };
+const STATUS_LABEL        = { below: "基準以下",   meets: "この基準OK",  exceeds: "基準超え" };
+const STATUS_LABEL_SIMPLE = { below: "力不足ぎみ", meets: "ちょうどOK",  exceeds: "余裕あり" };
 
 let currentData = null;
 let currentProfile = "mid";
+
+// ---------------------------------------------------------------------------
+// 設定（表示モード・テーマ・文字サイズ等）
+// ---------------------------------------------------------------------------
+
+const SETTINGS_KEY = "pcchecker_settings";
+const DEFAULT_SETTINGS = {
+  mode: "simple",            // "simple"(初心者向け) | "detailed"(詳しく)
+  theme: "dark",             // "dark" | "light"
+  fontSize: "normal",        // "small" | "normal" | "large"
+  defaultProfile: "auto",    // "auto" | "low" | "mid" | "high"
+  reduceMotion: "off",       // "off" | "on"
+};
+
+let settings = { ...DEFAULT_SETTINGS };
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+  } catch (e) {
+    settings = { ...DEFAULT_SETTINGS };
+  }
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch (e) { /* ストレージ不可でも動作は継続 */ }
+}
+
+// 設定値を <html> の data 属性へ反映（テーマ・文字サイズ・アニメ軽減はCSS側で対応）
+function applySettings() {
+  const root = document.documentElement;
+  root.dataset.theme = settings.theme;
+  root.dataset.font = settings.fontSize;
+  root.dataset.reduceMotion = settings.reduceMotion;
+  // 初心者モードではパーツ別解説・システム情報をCSSで非表示にする
+  root.dataset.mode = settings.mode;
+}
+
+// 設定モードに応じて初心者向け/詳細のテキストを選ぶ（平易版が空なら詳細版へフォールバック）
+function pickText(detailed, simple) {
+  return (settings.mode === "simple" && simple) ? simple : detailed;
+}
+
+// セグメントボタン群を現在の設定値に同期し、クリックハンドラを結線する
+function setupSettingsControls() {
+  document.querySelectorAll(".segmented[data-setting]").forEach(group => {
+    const key = group.dataset.setting;
+    group.querySelectorAll(".seg-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.value === settings[key]);
+      btn.addEventListener("click", () => changeSetting(key, btn.dataset.value));
+    });
+  });
+}
+
+function changeSetting(key, value) {
+  if (settings[key] === value) return;
+  settings[key] = value;
+  saveSettings();
+  applySettings();
+
+  // 該当グループのアクティブ表示を更新
+  document.querySelectorAll(`.segmented[data-setting="${key}"] .seg-btn`).forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.value === value);
+  });
+
+  // 表示内容に影響する設定は、結果表示中なら即時に反映する
+  if ((key === "mode" || key === "defaultProfile") && currentData) {
+    if (key === "defaultProfile") currentProfile = resolveProfile();
+    applyProfile(currentProfile);
+  }
+}
+
+// defaultProfile 設定を実際のプロファイルキーに解決する（auto はサーバー既定）
+function resolveProfile() {
+  if (settings.defaultProfile !== "auto" && currentData.profiles[settings.defaultProfile]) {
+    return settings.defaultProfile;
+  }
+  return currentData.default_profile || "mid";
+}
+
+function openSettings() {
+  document.getElementById("settings-overlay").classList.remove("hidden");
+}
+function closeSettings() {
+  document.getElementById("settings-overlay").classList.add("hidden");
+}
+function openFeedback() {
+  document.getElementById("feedback-overlay").classList.remove("hidden");
+}
+function closeFeedback() {
+  document.getElementById("feedback-overlay").classList.add("hidden");
+}
+function onOverlayClick(e) {
+  // パネル外（オーバーレイ背景）クリックで閉じる
+  if (e.target.id === "settings-overlay") closeSettings();
+  if (e.target.id === "feedback-overlay") closeFeedback();
+}
 
 async function startAnalysis() {
   show("loading-section");
@@ -30,13 +131,16 @@ async function startAnalysis() {
 
 function renderResult(data) {
   currentData = data;
-  currentProfile = data.default_profile || "mid";
+  currentProfile = resolveProfile();
 
   renderSysinfo(data.specs);
   setupProfileTabs();
   refreshFeedbackDiagState();
 
-  // 初回描画（アニメーションなし）
+  // 初回描画（アニメーションなし）。選択中のプロファイルタブを明示する
+  document.querySelectorAll(".profile-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.profile === currentProfile);
+  });
   _applyProfileDom(currentProfile);
 
   show("result-section");
@@ -88,8 +192,13 @@ function _applyProfileDom(key) {
   document.getElementById("profile-desc").textContent = p.description;
   renderOverall(p.overall);
   renderReplacement(p.replacement);
-  renderComponents(p.scores);
-  enrichPrices();
+  // 初心者モードではパーツ別解説を描画しない（CSSで非表示のうえ価格取得も省く）
+  if (settings.mode === "simple") {
+    document.getElementById("components-grid").innerHTML = "";
+  } else {
+    renderComponents(p.scores);
+    enrichPrices();
+  }
 }
 
 const VERDICT_INFO = {
@@ -110,10 +219,12 @@ function renderReplacement(rep) {
   const verdictEl = document.getElementById("replacement-verdict");
   verdictEl.textContent = info.label;
   verdictEl.className = `replacement-verdict ${info.cls}`;
-  document.getElementById("replacement-summary").textContent = rep.summary;
+  document.getElementById("replacement-summary").textContent =
+    pickText(rep.summary, rep.summary_simple);
 
+  const reasons = pickText(rep.reasons, rep.reasons_simple) || [];
   const reasonsEl = document.getElementById("replacement-reasons");
-  reasonsEl.innerHTML = (rep.reasons || []).map(r => `<li>${r}</li>`).join("");
+  reasonsEl.innerHTML = reasons.map(r => `<li>${r}</li>`).join("");
 
   const btoSection = document.getElementById("bto-section");
   const btoList = document.getElementById("bto-list");
@@ -204,9 +315,11 @@ function renderOverall(overall) {
   const gradeEl = document.getElementById("grade-circle");
   gradeEl.className = `grade-circle grade-${overall.grade}`;
   document.getElementById("grade-letter").textContent = overall.grade;
-  document.getElementById("overall-label").textContent = overall.label;
+  document.getElementById("overall-label").textContent =
+    pickText(overall.label, overall.label_simple);
   document.getElementById("overall-score-val").textContent = overall.score;
-  document.getElementById("overall-message").textContent = overall.message;
+  document.getElementById("overall-message").textContent =
+    pickText(overall.message, overall.message_simple);
 
   const pList = document.getElementById("priority-list");
   pList.innerHTML = "";
@@ -271,11 +384,17 @@ function renderComponents(scores) {
 
 function buildComponentCard(s) {
   const icon        = ICONS[s.name] || "🔧";
-  const statusLabel = STATUS_LABEL[s.status] || s.status;
+  const statusMap   = settings.mode === "simple" ? STATUS_LABEL_SIMPLE : STATUS_LABEL;
+  const statusLabel = statusMap[s.status] || s.status;
 
-  const recs = s.recommendations.length > 0
+  const currentValue = pickText(s.current_value, s.current_value_simple);
+  const standard     = pickText(s.midrange_standard, s.midrange_standard_simple);
+  const notes        = pickText(s.notes, s.notes_simple);
+  const recList      = pickText(s.recommendations, s.recommendations_simple) || [];
+
+  const recs = recList.length > 0
     ? `<div class="recommendations">
-        ${s.recommendations.map(r => `<div class="rec-item">${r}</div>`).join("")}
+        ${recList.map(r => `<div class="rec-item">${r}</div>`).join("")}
        </div>`
     : "";
 
@@ -317,12 +436,12 @@ function buildComponentCard(s) {
 
       <div class="comp-current">
         <div class="comp-current-label">現在のスペック</div>
-        <div class="comp-current-val">${s.current_value}</div>
+        <div class="comp-current-val">${currentValue}</div>
       </div>
 
-      <div class="comp-standard">${s.midrange_standard}</div>
+      <div class="comp-standard">${standard}</div>
 
-      ${s.notes ? `<div class="comp-notes">${s.notes}</div>` : ""}
+      ${notes ? `<div class="comp-notes">${notes}</div>` : ""}
 
       ${recs}
       ${upgrades}
@@ -565,7 +684,12 @@ function refreshFeedbackDiagState() {
   }
 }
 
+// テーマ・文字サイズは描画前に反映したいので即時に適用する
+loadSettings();
+applySettings();
+
 document.addEventListener("DOMContentLoaded", () => {
+  setupSettingsControls();
   setupFeedbackPreview();
   refreshFeedbackDiagState();
 });

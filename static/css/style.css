@@ -565,3 +565,166 @@ body {
 }
 .feedback-status.success { color: var(--exceeds); }
 .feedback-status.error { color: var(--below); }
+
+/* ===== ライトテーマ ===== */
+[data-theme="light"] {
+  --bg: #eef1f7;
+  --bg2: #ffffff;
+  --card: #ffffff;
+  --card-border: #d6dbe7;
+  --accent: #5a52e0;
+  --accent2: #00a98a;
+  --text: #1c2030;
+  --text-muted: #5b6377;
+  --below: #e23b4a;
+  --meets: #c2880a;
+  --exceeds: #00a98a;
+  --shadow: 0 4px 20px rgba(40,50,80,0.12);
+}
+[data-theme="light"] .header {
+  background: linear-gradient(135deg, #ffffff 0%, #eef1f7 100%);
+}
+
+/* ===== 文字サイズ ===== */
+/* rem基準でスケールさせるためルートのfont-sizeを切り替える */
+html { font-size: 16px; }
+html[data-font="small"]  { font-size: 14.5px; }
+html[data-font="large"]  { font-size: 18.5px; }
+
+/* ===== アニメーション軽減 ===== */
+html[data-reduce-motion="on"] * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* ===== 初心者モード: パーツ別解説・システム情報を隠す ===== */
+/* 総合評価と買い替え判定のみに絞り、技術的な詳細は出さない */
+html[data-mode="simple"] #sysinfo-card,
+html[data-mode="simple"] #components-section {
+  display: none;
+}
+
+/* ===== ヘッダー内のアクションボタン ===== */
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-btn {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.header-btn:hover {
+  border-color: var(--accent);
+}
+#settings-open:hover {
+  transform: rotate(30deg);
+}
+
+/* ===== 設定モーダル ===== */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+  z-index: 100;
+}
+.settings-panel {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 560px;
+  animation: settings-pop 0.18s ease;
+}
+@keyframes settings-pop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--card-border);
+}
+.settings-header h2 { font-size: 1.2rem; }
+.settings-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.settings-close-btn:hover { color: var(--text); background: var(--bg2); }
+.settings-body { padding: 8px 22px 22px; }
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.setting-info { flex: 1; min-width: 0; }
+.setting-label { font-size: 0.96rem; font-weight: 600; }
+.setting-help {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+
+/* セグメント切替コントロール */
+.segmented {
+  display: inline-flex;
+  background: var(--bg2);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.seg-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.seg-btn:hover { color: var(--text); }
+.seg-btn.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .setting-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .segmented { align-self: flex-start; }
+}

@@ -762,3 +762,67 @@ class TestEstimatePsu:
         result = analyze_psu(specs)
         assert result.name == "PSU 容量推定"
         assert "推定消費電力" in result.current_value
+
+
+# ---------------------------------------------------------------------------
+# 初心者向け表現（*_simple フィールド）
+# ---------------------------------------------------------------------------
+
+class TestSimpleText:
+    """各analyzerが詳細版と並列に初心者向けテキストを返すことを確認する"""
+
+    def _weak_specs(self):
+        # 各コンポーネントが基準割れし、推奨文が出る構成
+        s = PCSpecs()
+        s.cpu_name, s.cpu_cores, s.cpu_threads, s.cpu_base_ghz = "Old CPU", 2, 4, 2.0
+        s.ram_total_gb, s.ram_type = 4.0, "DDR4"
+        s.ram_slots_used, s.ram_slots_total = 1, 2
+        s.gpu_name, s.gpu_vram_gb = "NVIDIA GeForce GTX 1650", 2.0
+        s.storage_list = [{
+            "model": "Old HDD", "size_gb": 120.0, "free_gb": 5.0,
+            "is_ssd": False, "is_nvme": False, "mountpoints": ["C:\\"],
+        }]
+        s.display_width, s.display_height, s.display_refresh_hz = 1280, 720, 50
+        s.network_wired_mbps, s.network_wired_name = 100.0, "NIC"
+        s.network_wifi_standard, s.network_wifi_name = "Wi-Fi 4", "WLAN"
+        s.motherboard, s.mb_chipset = "Old Board", "B350"
+        return s
+
+    def test_cpu_has_simple_fields(self, high):
+        r = analyze_cpu(self._weak_specs(), high)
+        assert r.current_value_simple
+        assert r.midrange_standard_simple
+        assert r.notes_simple
+        assert len(r.recommendations_simple) == len(r.recommendations)
+
+    def test_ram_has_parallel_simple_recommendations(self, high):
+        r = analyze_ram(self._weak_specs(), high)
+        assert len(r.recommendations_simple) == len(r.recommendations)
+        assert r.recommendations_simple  # 基準割れで何か出る
+
+    def test_gpu_simple_avoids_vram_jargon(self, high):
+        r = analyze_gpu(self._weak_specs(), high)
+        assert r.recommendations_simple
+        # 平易版では "VRAM" という語を使わない
+        assert all("VRAM" not in s for s in r.recommendations_simple)
+
+    def test_storage_simple_present(self, high):
+        r = analyze_storage(self._weak_specs(), high)
+        assert r.current_value_simple
+        assert len(r.recommendations_simple) == len(r.recommendations)
+
+    def test_overall_has_simple_label_and_message(self, high):
+        scores = [
+            analyze_cpu(self._weak_specs(), high),
+            analyze_ram(self._weak_specs(), high),
+            analyze_gpu(self._weak_specs(), high),
+            analyze_storage(self._weak_specs(), high),
+        ]
+        overall = calculate_overall(scores)
+        assert overall["label_simple"]
+        assert overall["message_simple"]
+
+    def test_simple_standard_differs_by_tier(self, low, high):
+        r_low  = analyze_cpu(self._weak_specs(), low)
+        r_high = analyze_cpu(self._weak_specs(), high)
+        assert r_low.midrange_standard_simple != r_high.midrange_standard_simple

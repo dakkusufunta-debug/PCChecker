@@ -5,14 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PCChecker - PC診断・アップグレード提案</title>
   <link rel="icon" href="/static/icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="/static/css/style.css?v=20260613-6" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260614-3" />
 </head>
 <body>
   <header class="header">
     <div class="header-inner">
-      <div class="header-title">
-        <span class="header-icon">🖥️</span>
-        <h1>PCChecker</h1>
+      <div class="header-top">
+        <div class="header-title">
+          <span class="header-icon">🖥️</span>
+          <h1>PCChecker</h1>
+        </div>
+        <div class="header-actions">
+          <button id="feedback-open" class="header-btn" onclick="openFeedback()"
+                  aria-label="フィードバックを送る" title="フィードバック">💬</button>
+          <button id="settings-open" class="header-btn" onclick="openSettings()"
+                  aria-label="設定を開く" title="設定">⚙️</button>
+        </div>
       </div>
       <p class="header-sub">現在のPCスペックを分析し、用途に合わせた最適なアップグレードパーツをご提案します</p>
     </div>
@@ -114,9 +122,11 @@
         <div class="sysinfo-grid" id="sysinfo-grid"></div>
       </div>
 
-      <!-- コンポーネント評価 -->
-      <h2 class="section-title standalone">コンポーネント別評価 &amp; アップグレード提案</h2>
-      <div id="components-grid" class="components-grid"></div>
+      <!-- コンポーネント評価（初心者モードでは非表示） -->
+      <div id="components-section">
+        <h2 class="section-title standalone">コンポーネント別評価 &amp; アップグレード提案</h2>
+        <div id="components-grid" class="components-grid"></div>
+      </div>
 
       <!-- 再分析ボタン -->
       <div class="reanalyze-wrap">
@@ -126,45 +136,131 @@
       </div>
     </section>
 
-    <!-- フィードバック -->
-    <section id="feedback-section" class="card feedback-card">
-      <h2 class="section-title">フィードバックを送る</h2>
-      <p class="feedback-intro">不具合のご報告・ご要望をお寄せください。今後の改善の参考にさせていただきます。</p>
-      <div class="feedback-form">
-        <label class="feedback-label" for="feedback-category">種類</label>
-        <select id="feedback-category" class="feedback-select">
-          <option value="bug">不具合の報告</option>
-          <option value="request">機能の要望</option>
-          <option value="other">その他</option>
-        </select>
+  </main>
 
-        <label class="feedback-label" for="feedback-comment">内容</label>
-        <textarea id="feedback-comment" class="feedback-textarea" rows="4" maxlength="2000"
-          placeholder="例: ○○のスペックが正しく表示されません / △△の機能がほしいです"></textarea>
+  <!-- 設定モーダル -->
+  <div id="settings-overlay" class="settings-overlay hidden" onclick="onOverlayClick(event)">
+    <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="settings-header">
+        <h2 id="settings-title">設定</h2>
+        <button class="settings-close-btn" onclick="closeSettings()" aria-label="設定を閉じる">✕</button>
+      </div>
 
-        <label class="feedback-check">
-          <input type="checkbox" id="feedback-include-diag" checked />
-          診断結果(スペック・スコア)を添付する（不具合の再現に役立ちます）
-        </label>
-        <p class="feedback-note">
-          添付されるのはハードウェア構成と診断スコアのみで、氏名・PC名などの個人情報は含まれません。
-          <a href="#" id="feedback-preview-toggle">送信内容を確認</a>
-        </p>
-        <pre id="feedback-preview" class="feedback-preview hidden"></pre>
+      <div class="settings-body">
+        <!-- 表示モード -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">表示モード</div>
+            <div class="setting-help">専門用語が苦手な方は「初心者向け」がおすすめです</div>
+          </div>
+          <div class="segmented" data-setting="mode">
+            <button class="seg-btn" data-value="simple">初心者向け</button>
+            <button class="seg-btn" data-value="detailed">詳しく</button>
+          </div>
+        </div>
 
-        <div class="feedback-actions">
-          <button id="feedback-submit" class="btn btn-primary" onclick="submitFeedback()">送信する</button>
-          <span id="feedback-status" class="feedback-status"></span>
+        <!-- テーマ -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">画面の明るさ（テーマ）</div>
+            <div class="setting-help">目の負担や好みに合わせて選べます</div>
+          </div>
+          <div class="segmented" data-setting="theme">
+            <button class="seg-btn" data-value="dark">ダーク</button>
+            <button class="seg-btn" data-value="light">ライト</button>
+          </div>
+        </div>
+
+        <!-- 文字サイズ -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">文字サイズ</div>
+            <div class="setting-help">画面全体の文字の大きさを変えます</div>
+          </div>
+          <div class="segmented" data-setting="fontSize">
+            <button class="seg-btn" data-value="small">小</button>
+            <button class="seg-btn" data-value="normal">標準</button>
+            <button class="seg-btn" data-value="large">大</button>
+          </div>
+        </div>
+
+        <!-- 既定の評価基準 -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">最初に表示する評価基準</div>
+            <div class="setting-help">分析後に最初に開くタブを選べます</div>
+          </div>
+          <div class="segmented" data-setting="defaultProfile">
+            <button class="seg-btn" data-value="auto">自動</button>
+            <button class="seg-btn" data-value="low">ロー</button>
+            <button class="seg-btn" data-value="mid">ミドル</button>
+            <button class="seg-btn" data-value="high">ハイ</button>
+          </div>
+        </div>
+
+        <!-- アニメーション軽減 -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">アニメーションを減らす</div>
+            <div class="setting-help">バーの動きなどを控えめにします</div>
+          </div>
+          <div class="segmented" data-setting="reduceMotion">
+            <button class="seg-btn" data-value="off">通常</button>
+            <button class="seg-btn" data-value="on">減らす</button>
+          </div>
         </div>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
+
+  <!-- フィードバック画面（独立モーダル） -->
+  <div id="feedback-overlay" class="settings-overlay hidden" onclick="onOverlayClick(event)">
+    <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+      <div class="settings-header">
+        <h2 id="feedback-title">フィードバックを送る</h2>
+        <button class="settings-close-btn" onclick="closeFeedback()" aria-label="フィードバックを閉じる">✕</button>
+      </div>
+
+      <div class="settings-body">
+        <section id="feedback-section" class="feedback-card">
+          <p class="feedback-intro">不具合のご報告・ご要望をお寄せください。今後の改善の参考にさせていただきます。</p>
+          <div class="feedback-form">
+            <label class="feedback-label" for="feedback-category">種類</label>
+            <select id="feedback-category" class="feedback-select">
+              <option value="bug">不具合の報告</option>
+              <option value="request">機能の要望</option>
+              <option value="other">その他</option>
+            </select>
+
+            <label class="feedback-label" for="feedback-comment">内容</label>
+            <textarea id="feedback-comment" class="feedback-textarea" rows="4" maxlength="2000"
+              placeholder="例: ○○のスペックが正しく表示されません / △△の機能がほしいです"></textarea>
+
+            <label class="feedback-check">
+              <input type="checkbox" id="feedback-include-diag" checked />
+              診断結果(スペック・スコア)を添付する（不具合の再現に役立ちます）
+            </label>
+            <p class="feedback-note">
+              添付されるのはハードウェア構成と診断スコアのみで、氏名・PC名などの個人情報は含まれません。
+              <a href="#" id="feedback-preview-toggle">送信内容を確認</a>
+            </p>
+            <pre id="feedback-preview" class="feedback-preview hidden"></pre>
+
+            <div class="feedback-actions">
+              <button id="feedback-submit" class="btn btn-primary" onclick="submitFeedback()">送信する</button>
+              <span id="feedback-status" class="feedback-status"></span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer">
     <p>PCChecker — スペック情報はお使いのPC上でローカルに収集されます</p>
     <p class="footer-credit">価格・商品情報は楽天市場から取得した参考値です(Supported by <a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener">Rakuten Developers</a>)。掲載リンクには成果報酬型(アフィリエイト)リンクが含まれます。</p>
   </footer>
 
-  <script src="/static/js/app.js?v=20260613-6"></script>
+  <script src="/static/js/app.js?v=20260614-3"></script>
 </body>
 </html>
