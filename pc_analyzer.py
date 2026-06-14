@@ -119,7 +119,6 @@ GPU_TDP: dict[str, int] = {
 PROFILES: dict[str, dict] = {
     "low": {
         "label": "ロースペック（コスパ重視）",
-        "tier": "low",
         "description": "オフィスワーク・Webブラウジング・動画視聴中心",
         "standards": {
             "cpu":        {"cores": 4,    "threads": 8,  "base_ghz": 2.5,
@@ -206,7 +205,6 @@ PROFILES: dict[str, dict] = {
 
     "mid": {
         "label": "ミドルスペック（汎用）",
-        "tier": "mid",
         "description": "マルチタスク・ゲーム・クリエイティブ作業に対応",
         "standards": {
             "cpu":        {"cores": 6,      "threads": 12, "base_ghz": 3.5,
@@ -301,7 +299,6 @@ PROFILES: dict[str, dict] = {
 
     "high": {
         "label": "ハイスペック（クリエイター・ゲーマー向け）",
-        "tier": "high",
         "description": "4Kゲーム・4K動画編集・AI開発・配信向け",
         "standards": {
             "cpu":        {"cores": 8,      "threads": 16, "base_ghz": 4.0,
@@ -406,11 +403,7 @@ DEFAULT_PROFILE = "mid"
 
 @dataclass
 class ComponentScore:
-    """コンポーネント評価結果
-
-    *_simple フィールドは「初心者向け表示」用の平易な言い換え。
-    未設定（空）の場合はフロント側で詳細版にフォールバックする。
-    """
+    """コンポーネント評価結果"""
     name: str
     current_value: str
     midrange_standard: str
@@ -419,69 +412,6 @@ class ComponentScore:
     recommendations: list[str] = field(default_factory=list)
     upgrade_options: list[dict] = field(default_factory=list)
     notes: str = ""
-    # 初心者向けの言い換え（任意。空なら詳細版を使う）
-    recommendations_simple: list[str] = field(default_factory=list)
-    notes_simple: str = ""
-    current_value_simple: str = ""
-    midrange_standard_simple: str = ""
-
-
-def _add_rec(score_recs: list[str], score_recs_simple: list[str],
-             detailed: str, simple: str) -> None:
-    """詳細版と初心者向け版の推奨文を対で追加するヘルパー"""
-    score_recs.append(detailed)
-    score_recs_simple.append(simple)
-
-
-# 初心者向けの「目安（基準）」表現。型番を出さず用途ベースで説明する。
-_SIMPLE_STANDARDS: dict[str, dict[str, str]] = {
-    "cpu": {
-        "low":  "ネットや動画なら十分なCPU（4コア以上が目安）",
-        "mid":  "普段使いから軽いゲームまで快適なCPU（6コア以上が目安）",
-        "high": "ゲームや動画編集も快適な高性能CPU（8コア以上が目安）",
-    },
-    "ram": {
-        "low":  "メモリ 8GB以上（同時に開く作業が少ない人向け）",
-        "mid":  "メモリ 16GB以上（多くの人にちょうどいい量）",
-        "high": "メモリ 32GB以上（動画編集や重い作業向け）",
-    },
-    "gpu": {
-        "low":  "簡単なゲームや動画再生ができる映像性能",
-        "mid":  "人気のゲームが楽しめる映像性能",
-        "high": "重いゲームや3D制作もこなせる映像性能",
-    },
-    "storage": {
-        "low":  "SSD 256GB以上（読み書きが速い保存装置）",
-        "mid":  "高速なSSD 500GB以上",
-        "high": "とても高速なSSD 1TB以上",
-    },
-    "display": {
-        "low":  "ふつうの画面（HD以上）",
-        "mid":  "フルHD（くっきり見える標準的な画面）",
-        "high": "高精細でなめらかに動く画面",
-    },
-    "network": {
-        "low":  "ふつうの有線/無線インターネット接続",
-        "mid":  "高速な有線/Wi-Fi 6接続",
-        "high": "超高速な有線/最新Wi-Fi接続",
-    },
-    "motherboard": {
-        "low":  "極端に古くない本体の世代",
-        "mid":  "近年の本体の世代",
-        "high": "最新世代の本体",
-    },
-    "ai_accelerator": {
-        "low":  "AI処理の専用機能はなくても大丈夫",
-        "mid":  "AI処理に対応（NPUなどの専用機能）",
-        "high": "高いAI処理性能（NPUや高性能GPU）",
-    },
-}
-
-
-def _simple_standard(component: str, profile: dict) -> str:
-    """コンポーネントとプロファイルtierから初心者向けの目安文を返す"""
-    tier = profile.get("tier", "mid")
-    return _SIMPLE_STANDARDS.get(component, {}).get(tier, "")
 
 
 @dataclass
@@ -1225,45 +1155,33 @@ def analyze_cpu(specs: PCSpecs, profile: dict) -> ComponentScore:
     status = _status_from_score(score)
 
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if specs.cpu_cores < std["cores"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"物理コア数が {specs.cpu_cores} コアです。"
-            f"この基準では {std['cores']} コア以上を推奨します。",
-            f"CPUの処理の担当者（コア）が {specs.cpu_cores} 人ぶんで、"
-            f"この用途には {std['cores']} 人ぶん以上あると安心です。",
+            f"この基準では {std['cores']} コア以上を推奨します。"
         )
         upgrade_options = opts["cpu"][:]
 
     if specs.cpu_base_ghz > 0 and specs.cpu_base_ghz < std["base_ghz"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"ベースクロックが {specs.cpu_base_ghz} GHz と低めです。"
-            f"{std['base_ghz']} GHz 以上を目安にしてください。",
-            "CPUの動作スピードがやや控えめです。"
-            "新しいCPUにすると全体の動きが軽くなります。",
+            f"{std['base_ghz']} GHz 以上を目安にしてください。"
         )
 
     if score >= 80:
         notes = "CPUはこの基準を大幅に上回っています。しばらくアップグレード不要です。"
-        notes_simple = "CPUの性能は十分です。当分は買い替え不要です。"
     elif score >= 60:
         notes = "CPUはこの基準を概ね満たしています。"
-        notes_simple = "CPUの性能はこの用途にほぼ足りています。"
     else:
         notes = "CPUアップグレードにより大幅なパフォーマンス向上が見込めます。"
-        notes_simple = "CPUを新しくすると、動作がぐっと速くなりそうです。"
 
     current_val = f"{specs.cpu_name} ({specs.cpu_cores}コア/{specs.cpu_threads}スレッド, {specs.cpu_base_ghz}GHz)"
-    current_simple = f"{specs.cpu_name}（{specs.cpu_cores}コア＝処理の担当者{specs.cpu_cores}人ぶん）"
     return ComponentScore(
         name="CPU", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("cpu", profile),
     )
 
 
@@ -1274,17 +1192,13 @@ def analyze_ram(specs: PCSpecs, profile: dict) -> ComponentScore:
     status = _status_from_score(score)
 
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if specs.ram_total_gb < std["total_gb"]:
         needed = std["total_gb"] - specs.ram_total_gb
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"現在 {specs.ram_total_gb}GB です。"
-            f"この基準では {int(std['total_gb'])}GB 以上を推奨します（あと {needed:.0f}GB 必要）。",
-            f"メモリ（作業スペース）が {specs.ram_total_gb}GB です。"
-            f"あと {needed:.0f}GB 足して {int(std['total_gb'])}GB 以上にすると、"
-            "たくさんの画面を同時に開いても重くなりにくくなります。",
+            f"この基準では {int(std['total_gb'])}GB 以上を推奨します（あと {needed:.0f}GB 必要）。"
         )
         ram_type = specs.ram_type or "DDR4"
         # ノートPCはSODIMM、デスクトップはDIMMの候補から選ぶ
@@ -1296,33 +1210,24 @@ def analyze_ram(specs: PCSpecs, profile: dict) -> ComponentScore:
 
     if specs.ram_slots_total > 0 and specs.ram_slots_used < specs.ram_slots_total:
         empty = specs.ram_slots_total - specs.ram_slots_used
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"空きスロットが {empty} 本あります。"
-            "同規格のRAMを追加してデュアルチャネル構成にすると帯域幅が向上します。",
-            f"メモリの空き差込口が {empty} 本あります。"
-            "同じ種類のメモリを足すと、より効率よく動くようになります。",
+            "同規格のRAMを追加してデュアルチャネル構成にすると帯域幅が向上します。"
         )
 
     if score >= 80:
         notes = "RAMは十分です。マルチタスクや動画編集も快適に行えます。"
-        notes_simple = "メモリは十分です。たくさんの作業を同時にしても安心です。"
     elif score >= 60:
         notes = "この基準を満たしています。"
-        notes_simple = "メモリの量はこの用途に足りています。"
     else:
         notes = "RAM増設はコストパフォーマンスが非常に高いアップグレードです。"
-        notes_simple = "メモリ追加は、少ない費用で効果が大きいおすすめの改善です。"
 
     slot_info   = f", スロット {specs.ram_slots_used}/{specs.ram_slots_total}" if specs.ram_slots_total > 0 else ""
     current_val = f"{specs.ram_total_gb}GB {specs.ram_type}{slot_info}"
-    current_simple = f"メモリ {specs.ram_total_gb}GB（同時作業のための作業スペース）"
     return ComponentScore(
         name="RAM", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("ram", profile),
     )
 
 
@@ -1337,11 +1242,6 @@ def analyze_gpu(specs: PCSpecs, profile: dict) -> ComponentScore:
             recommendations=["GPUが検出できませんでした。専用GPUの搭載を検討してください。"],
             upgrade_options=opts["gpu_none"],
             notes="専用GPUが未搭載です。ゲームや映像制作には必須です。",
-            recommendations_simple=["映像専用の部品（グラフィックボード）が見つかりませんでした。"
-                                    "ゲームや動画編集をするなら追加を検討しましょう。"],
-            notes_simple="映像専用の部品がありません。ゲームや映像制作には必要です。",
-            current_value_simple="映像専用の部品（グラフィックボード）は見つかりませんでした",
-            midrange_standard_simple=_simple_standard("gpu", profile),
         )
 
     score = _score(specs.gpu_vram_gb, std["vram_gb"])
@@ -1351,44 +1251,30 @@ def analyze_gpu(specs: PCSpecs, profile: dict) -> ComponentScore:
 
     status = _status_from_score(score)
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if is_integrated:
-        _add_rec(recommendations, recommendations_simple,
-            "統合グラフィックスが検出されました。3Dゲームや映像制作には専用GPUが必要です。",
-            "映像はCPU内蔵の簡易機能で処理しています。"
-            "本格的なゲームや映像制作には、映像専用の部品（グラフィックボード）が必要です。",
-        )
+        recommendations.append("統合グラフィックスが検出されました。3Dゲームや映像制作には専用GPUが必要です。")
         upgrade_options = opts["gpu_integrated"][:]
     elif specs.gpu_vram_gb < std["vram_gb"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"VRAM が {specs.gpu_vram_gb}GB です。"
-            f"この基準では {std['vram_gb']:.0f}GB 以上を推奨します。",
-            f"映像用のメモリが {specs.gpu_vram_gb}GB です。"
-            "もう少し多いと、最近のゲームや高画質の作業がなめらかになります。",
+            f"この基準では {std['vram_gb']:.0f}GB 以上を推奨します。"
         )
         upgrade_options = opts["gpu_low_vram"][:]
 
     if score >= 80:
         notes = "GPUはこの基準を超えています。快適な動作が期待できます。"
-        notes_simple = "映像性能は十分です。ゲームや映像作業も快適にこなせます。"
     elif score >= 60:
         notes = "この基準を概ね満たしています。"
-        notes_simple = "映像性能はこの用途にほぼ足りています。"
     else:
         notes = "GPUアップグレードで体感パフォーマンスが劇的に向上します。"
-        notes_simple = "グラフィックボードを替えると、ゲームや映像が見違えて軽くなります。"
 
     current_val = f"{specs.gpu_name} (VRAM: {specs.gpu_vram_gb}GB)"
-    current_simple = f"{specs.gpu_name}（映像用メモリ {specs.gpu_vram_gb}GB）"
     return ComponentScore(
         name="GPU", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("gpu", profile),
     )
 
 
@@ -1401,9 +1287,6 @@ def analyze_storage(specs: PCSpecs, profile: dict) -> ComponentScore:
             name="ストレージ", current_value="検出できませんでした",
             midrange_standard=std["label"], status="below", score=0,
             notes="ストレージ情報が取得できませんでした。",
-            notes_simple="保存装置（データをしまう場所）の情報を読み取れませんでした。",
-            current_value_simple="保存装置の情報は読み取れませんでした",
-            midrange_standard_simple=_simple_standard("storage", profile),
         )
 
     primary = next(
@@ -1422,66 +1305,45 @@ def analyze_storage(specs: PCSpecs, profile: dict) -> ComponentScore:
 
     status = _status_from_score(score)
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if not is_ssd:
-        _add_rec(recommendations, recommendations_simple,
-            "HDDが検出されました。NVMe SSDへの換装でOSの起動・アプリ読み込みが劇的に高速化します。",
-            "古いタイプの保存装置（HDD）が使われています。"
-            "速いタイプ（SSD）に替えると、電源を入れてからの待ち時間やアプリの起動が大幅に速くなります。",
-        )
+        recommendations.append("HDDが検出されました。NVMe SSDへの換装でOSの起動・アプリ読み込みが劇的に高速化します。")
         upgrade_options = opts["storage_hdd"][:]
     elif not is_nvme:
-        _add_rec(recommendations, recommendations_simple,
-            "SATA SSDが検出されました。NVMe SSDに換装することでさらなる高速化が可能です。",
-            "保存装置は速いタイプ（SSD）ですが、さらに速い種類に替えるともっと快適になります。",
-        )
+        recommendations.append("SATA SSDが検出されました。NVMe SSDに換装することでさらなる高速化が可能です。")
         upgrade_options = opts["storage_sata"][:]
 
     if size_gb < std["total_gb"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"ストレージ容量が {size_gb:.0f}GB です。"
-            f"この基準では {std['total_gb']:.0f}GB 以上を推奨します。",
-            f"保存できる容量が {size_gb:.0f}GB です。"
-            f"{std['total_gb']:.0f}GB 以上あると、写真やアプリをためても安心です。",
+            f"この基準では {std['total_gb']:.0f}GB 以上を推奨します。"
         )
         if not upgrade_options:
             upgrade_options = opts["storage_small"][:]
 
     if free_gb < std["free_gb"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"空き容量が {free_gb:.1f}GB と少なくなっています。"
-            "不要ファイルの整理または増設を推奨します。",
-            f"残りの空きが {free_gb:.1f}GB と少なめです。"
-            "いらないファイルを整理するか、容量を足すのがおすすめです。",
+            "不要ファイルの整理または増設を推奨します。"
         )
 
     if score >= 80:
         notes = "ストレージはこの基準を十分に満たしています。"
-        notes_simple = "保存装置は速さも容量も十分です。"
     elif score >= 60:
         notes = "ストレージは概ね問題ありません。"
-        notes_simple = "保存装置はおおむね問題ありません。"
     else:
         notes = "ストレージのアップグレードはコストパフォーマンスが高い投資です。"
-        notes_simple = "保存装置の交換は、少ない費用で快適さが大きく上がるおすすめの改善です。"
 
     storage_type = "NVMe SSD" if is_nvme else ("SATA SSD" if is_ssd else "HDD")
-    storage_type_simple = "とても速いSSD" if is_nvme else ("速いSSD" if is_ssd else "古いタイプ（HDD）")
     current_val  = f"{primary['model']} ({size_gb:.0f}GB, {storage_type}, 空き: {free_gb:.1f}GB)"
-    current_simple = f"{storage_type_simple} {size_gb:.0f}GB（空き {free_gb:.1f}GB）"
     if len(specs.storage_list) > 1:
         current_val += f"  ほか {len(specs.storage_list) - 1} 台"
-        current_simple += f"  ほか {len(specs.storage_list) - 1} 台"
 
     return ComponentScore(
         name="ストレージ", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("storage", profile),
     )
 
 
@@ -1494,9 +1356,6 @@ def analyze_display(specs: PCSpecs, profile: dict) -> ComponentScore:
             name="ディスプレイ", current_value="検出できませんでした",
             midrange_standard=std["label"], status="below", score=0,
             notes="ディスプレイ情報を取得できませんでした。モニターが接続されているか確認してください。",
-            notes_simple="画面の情報を読み取れませんでした。モニターがつながっているかご確認ください。",
-            current_value_simple="画面の情報は読み取れませんでした",
-            midrange_standard_simple=_simple_standard("display", profile),
         )
 
     pixel_score = _score(specs.display_width * specs.display_height, std["width"] * std["height"])
@@ -1505,54 +1364,39 @@ def analyze_display(specs: PCSpecs, profile: dict) -> ComponentScore:
     status = _status_from_score(score)
 
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if specs.display_width < std["width"] or specs.display_height < std["height"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"解像度が {specs.display_width}×{specs.display_height} です。"
-            f"この基準では {std['width']}×{std['height']} 以上を推奨します。",
-            "画面のきめ細かさ（解像度）が控えめです。"
-            "もっと精細なモニターにすると文字や画像がくっきり見えます。",
+            f"この基準では {std['width']}×{std['height']} 以上を推奨します。"
         )
         upgrade_options = opts["display_low_res"][:]
 
     if specs.display_refresh_hz > 0 and specs.display_refresh_hz < 60:
-        _add_rec(recommendations, recommendations_simple,
-            f"リフレッシュレートが {specs.display_refresh_hz}Hz と低めです。60Hz以上を推奨します。",
-            "画面の動きのなめらかさが控えめです。"
-            "なめらかに表示できるモニターにすると目が疲れにくくなります。",
-        )
+        recommendations.append(f"リフレッシュレートが {specs.display_refresh_hz}Hz と低めです。60Hz以上を推奨します。")
         upgrade_options = opts["display_low_hz"][:]
     elif specs.display_refresh_hz > 0 and specs.display_refresh_hz < std["refresh_hz"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"現在 {specs.display_refresh_hz}Hz です。"
-            f"この基準では {std['refresh_hz']}Hz 以上を推奨します。",
-            "もっとなめらかに動く画面にすると、ゲームやスクロールが快適になります。",
+            f"この基準では {std['refresh_hz']}Hz 以上を推奨します。"
         )
         if not upgrade_options:
             upgrade_options = opts["display_gaming_hz"][:]
 
     if score >= 80:
         notes = "ディスプレイはこの基準を十分に満たしています。"
-        notes_simple = "画面はこの用途に十分なきれいさ・なめらかさです。"
     elif score >= 60:
         notes = "この基準を概ね満たしています。"
-        notes_simple = "画面はこの用途にほぼ足りています。"
     else:
         notes = "ディスプレイのアップグレードで作業効率・没入感が大幅に向上します。"
-        notes_simple = "モニターを替えると、見やすさや作業のしやすさが大きく上がります。"
 
     name_part   = f" ({specs.display_name})" if specs.display_name else ""
     current_val = f"{specs.display_width}×{specs.display_height} / {specs.display_refresh_hz}Hz{name_part}"
-    current_simple = f"画面のきめ細かさ {specs.display_width}×{specs.display_height} / なめらかさ {specs.display_refresh_hz}Hz"
     return ComponentScore(
         name="ディスプレイ", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("display", profile),
     )
 
 
@@ -1568,9 +1412,6 @@ def analyze_network(specs: PCSpecs, profile: dict) -> ComponentScore:
             name="ネットワーク", current_value="検出できませんでした",
             midrange_standard=std["label"], status="below", score=0,
             notes="有効なネットワークアダプタが検出できませんでした。",
-            notes_simple="インターネットにつなぐ部品が見つかりませんでした。",
-            current_value_simple="インターネット接続の部品は見つかりませんでした",
-            midrange_standard_simple=_simple_standard("network", profile),
         )
 
     wired_score = _score(specs.network_wired_mbps, std["wired_mbps"]) if has_wired else 0
@@ -1585,63 +1426,44 @@ def analyze_network(specs: PCSpecs, profile: dict) -> ComponentScore:
 
     status = _status_from_score(score)
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if has_wired and specs.network_wired_mbps < std["wired_mbps"]:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"有線LANが {specs.network_wired_mbps:.0f}Mbps です。"
-            f"この基準では {std['wired_mbps']:.0f}Mbps 以上を推奨します。",
-            "有線インターネットの速さが控えめです。"
-            "速い規格に対応した部品にすると、ダウンロードなどが快適になります。",
+            f"この基準では {std['wired_mbps']:.0f}Mbps 以上を推奨します。"
         )
         upgrade_options.extend(opts["network_wired"])
 
     wifi_rank_val = _wifi_rank(specs.network_wifi_standard) if has_wifi else 0
     if wifi_rank_val < std["wifi_rank"]:
         if not has_wifi:
-            _add_rec(recommendations, recommendations_simple,
-                "Wi-Fiアダプタが検出されませんでした。この基準のWi-Fi対応アダプタの追加を検討してください。",
-                "無線（Wi-Fi）の部品が見つかりませんでした。"
-                "無線でつなぎたい場合はWi-Fi対応の部品を足すと便利です。",
-            )
+            recommendations.append("Wi-Fiアダプタが検出されませんでした。この基準のWi-Fi対応アダプタの追加を検討してください。")
         else:
-            _add_rec(recommendations, recommendations_simple,
+            recommendations.append(
                 f"Wi-Fi規格が {specs.network_wifi_standard} です。"
-                f"この基準ではWi-Fi {'6E' if std['wifi_rank'] >= 6 else '6'} 以上を推奨します。",
-                f"無線（Wi-Fi）の規格が {specs.network_wifi_standard} です。"
-                "新しい規格に替えると、通信が速く安定します。",
+                f"この基準ではWi-Fi {'6E' if std['wifi_rank'] >= 6 else '6'} 以上を推奨します。"
             )
         upgrade_options.extend(opts["network_wifi"])
 
     if score >= 80:
         notes = "ネットワーク環境はこの基準を十分に満たしています。"
-        notes_simple = "インターネット接続はこの用途に十分な速さです。"
     elif score >= 60:
         notes = "この基準を概ね満たしています。"
-        notes_simple = "インターネット接続はこの用途にほぼ足りています。"
     else:
         notes = "ネットワークアダプタのアップグレードで通信速度・安定性が向上します。"
-        notes_simple = "接続部品を替えると、通信の速さと安定さが上がります。"
 
     parts = []
-    parts_simple = []
     if has_wired:
         parts.append(f"有線 {specs.network_wired_mbps:.0f}Mbps ({specs.network_wired_name})")
-        parts_simple.append(f"有線 {specs.network_wired_mbps:.0f}Mbps")
     if has_wifi:
         parts.append(f"{specs.network_wifi_standard} ({specs.network_wifi_name})")
-        parts_simple.append(f"無線 {specs.network_wifi_standard}")
     current_val = " / ".join(parts)
-    current_simple = " / ".join(parts_simple)
 
     return ComponentScore(
         name="ネットワーク", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("network", profile),
     )
 
 
@@ -1660,10 +1482,8 @@ def analyze_motherboard(specs: PCSpecs, profile: dict) -> ComponentScore:
             status = _status_from_score(score)
             if score >= 60:
                 notes = "CPU世代からの推定で、プラットフォームはこの基準を概ね満たしています。"
-                notes_simple = "CPUの世代から見て、本体の土台はこの用途にほぼ足りています。"
             else:
                 notes = "CPU世代からの推定で、プラットフォームがこの基準より古い可能性があります。"
-                notes_simple = "CPUの世代から見て、本体の土台がやや古い可能性があります。"
             return ComponentScore(
                 name="マザーボード",
                 current_value=f"{mb_name} (CPU世代から推定)",
@@ -1671,21 +1491,12 @@ def analyze_motherboard(specs: PCSpecs, profile: dict) -> ComponentScore:
                 recommendations=["メーカー製PCのためチップセットを特定できませんでした。"
                                  "CPU世代に基づく推定評価です。"],
                 notes=notes,
-                recommendations_simple=["メーカー製PCのため土台（基板）の詳細が分からず、"
-                                        "CPUの世代から大まかに判断しています。"],
-                notes_simple=notes_simple,
-                current_value_simple=f"{mb_name}（CPUの世代から推定）",
-                midrange_standard_simple=_simple_standard("motherboard", profile),
             )
         return ComponentScore(
             name="マザーボード", current_value=mb_name,
             midrange_standard=std["label"], status="below", score=30,
             recommendations=["チップセットを特定できませんでした。マザーボードが古い可能性があります。"],
             notes="チップセット情報が不明なため正確な評価ができません。",
-            recommendations_simple=["本体の土台（基板）の種類が分からず、古い可能性があります。"],
-            notes_simple="土台の情報が読み取れず、正確な判断ができませんでした。",
-            current_value_simple=mb_name,
-            midrange_standard_simple=_simple_standard("motherboard", profile),
         )
 
     chipset_raw   = _CHIPSET_SCORES.get(chipset, 30)
@@ -1694,37 +1505,27 @@ def analyze_motherboard(specs: PCSpecs, profile: dict) -> ComponentScore:
     status        = _status_from_score(score)
 
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if chipset_raw < min_score:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"チップセット {chipset} はこの基準（スコア {min_score} 以上）を下回っています。"
-            "より新しいプラットフォームへの移行を検討してください。",
-            "本体の土台（基板）の世代が古めです。"
-            "新しくするにはCPUやメモリも一緒に替える大きめの作業になります。",
+            "より新しいプラットフォームへの移行を検討してください。"
         )
         upgrade_options = opts["motherboard"][:]
 
     if score >= 80:
         notes = f"チップセット {chipset} はこの基準に対して十分な性能を持つプラットフォームです。"
-        notes_simple = "本体の土台は新しめで、十分な性能があります。"
     elif score >= 60:
         notes = f"チップセット {chipset} はこの基準を概ね満たしています。"
-        notes_simple = "本体の土台はこの用途にほぼ足りています。"
     else:
         notes = f"チップセット {chipset} はこの基準を下回っています。プラットフォーム全体の更新を検討してください（CPU・RAM・マザーボードのセット交換）。"
-        notes_simple = "本体の土台が古めです。新しくするならCPU・メモリ・基板をまとめて替える形になります。"
 
     current_val = f"{mb_name} (チップセット: {chipset})"
-    current_simple = f"{mb_name}（本体の土台）"
     return ComponentScore(
         name="マザーボード", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("motherboard", profile),
     )
 
 
@@ -1746,22 +1547,17 @@ def analyze_ai_accelerator(specs: PCSpecs, profile: dict) -> ComponentScore:
 
     status = _status_from_score(score)
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     upgrade_options: list[dict] = []
 
     if total_tops == 0:
-        _add_rec(recommendations, recommendations_simple,
-            "AI アクセラレータ（NPU/Tensor Core/外付けTPU）が検出されませんでした。",
-            "AI処理を速くする専用部品（NPUなど）は見つかりませんでした。"
-            "画像生成AIなどを使わなければ、無くても問題ありません。",
+        recommendations.append(
+            "AI アクセラレータ（NPU/Tensor Core/外付けTPU）が検出されませんでした。"
         )
         upgrade_options = opts[:]
     elif total_tops < min_tops:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"AI 処理性能が {total_tops:.0f} TOPS です。"
-            f"この基準では {min_tops:.0f} TOPS 以上を推奨します。",
-            "AI処理の専用性能がやや控えめです。"
-            "AIを本格的に使うなら、専用部品の追加で快適になります。",
+            f"この基準では {min_tops:.0f} TOPS 以上を推奨します。"
         )
         upgrade_options = opts[:]
 
@@ -1773,25 +1569,18 @@ def analyze_ai_accelerator(specs: PCSpecs, profile: dict) -> ComponentScore:
     for d in specs.ai_external_devices:
         parts.append(f"外付け: {d['name']} ({d.get('tops', 0):.0f} TOPS)")
     current_val = " / ".join(parts) if parts else f"なし (合計 {total_tops:.0f} TOPS)"
-    current_simple = "AI専用の処理機能あり" if total_tops > 0 else "AI専用の処理機能はなし"
 
     if score >= 80:
         notes = f"AI 処理性能は十分です（合計 {total_tops:.0f} TOPS）。"
-        notes_simple = "AI処理を速くする機能は十分にあります。"
     elif score >= 60:
         notes = f"AI 処理性能はこの基準を概ね満たしています（合計 {total_tops:.0f} TOPS）。"
-        notes_simple = "AI処理の機能はこの用途にほぼ足りています。"
     else:
         notes = f"AIワークロードには性能不足の可能性があります（合計 {total_tops:.0f} TOPS）。"
-        notes_simple = "AIを本格的に使うには、専用機能が少し足りないかもしれません。"
 
     return ComponentScore(
         name="AI アクセラレータ", current_value=current_val,
         midrange_standard=std["label"], status=status, score=score,
         recommendations=recommendations, upgrade_options=upgrade_options, notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple=_simple_standard("ai_accelerator", profile),
     )
 
 
@@ -1802,43 +1591,34 @@ def analyze_ai_accelerator(specs: PCSpecs, profile: dict) -> ComponentScore:
 def analyze_system_health(specs: PCSpecs) -> ComponentScore:
     """TRIM・電源プラン・スタートアップ数・Windows Update を評価する"""
     recommendations: list[str] = []
-    recommendations_simple: list[str] = []
     score = 100
 
     if not specs.trim_enabled:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             "TRIM が無効です。SSD の書き込み性能が低下します。"
-            "「fsutil behavior set DisableDeleteNotify 0」で有効化を推奨します。",
-            "SSDを長く快適に保つ自動お手入れ機能（TRIM）がオフです。"
-            "オンにすると書き込みの速さが保たれます（詳しい設定が必要です）。",
+            "「fsutil behavior set DisableDeleteNotify 0」で有効化を推奨します。"
         )
         score -= 20
 
     if specs.power_plan:
         plan_l = specs.power_plan.lower()
         if "power saver" in plan_l or "省電力" in plan_l:
-            _add_rec(recommendations, recommendations_simple,
+            recommendations.append(
                 f"電源プランが「{specs.power_plan}」です。"
-                "「バランス」または「高パフォーマンス」への変更でパフォーマンスが向上します。",
-                f"省エネ優先の電源設定（{specs.power_plan}）になっています。"
-                "「バランス」に変えると動作が軽くなります。",
+                "「バランス」または「高パフォーマンス」への変更でパフォーマンスが向上します。"
             )
             score -= 15
 
     if specs.startup_app_count > 20:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"スタートアップアプリが {specs.startup_app_count} 個登録されています。"
-            "不要なアプリを無効にすることで起動時間と常駐メモリが改善します。",
-            f"電源を入れたとき自動で立ち上がるアプリが {specs.startup_app_count} 個と多めです。"
-            "使わないものをオフにすると起動が速くなります。",
+            "不要なアプリを無効にすることで起動時間と常駐メモリが改善します。"
         )
         score -= 15
     elif specs.startup_app_count > 10:
-        _add_rec(recommendations, recommendations_simple,
+        recommendations.append(
             f"スタートアップアプリが {specs.startup_app_count} 個あります。"
-            "不要なものを無効化すると起動が速くなります。",
-            f"自動で立ち上がるアプリが {specs.startup_app_count} 個あります。"
-            "使わないものをオフにすると起動が少し速くなります。",
+            "不要なものを無効化すると起動が速くなります。"
         )
         score -= 5
 
@@ -1848,17 +1628,14 @@ def analyze_system_health(specs: PCSpecs) -> ComponentScore:
             last = date.fromisoformat(specs.last_windows_update)
             delta = (date.today() - last).days
             if delta > 180:
-                _add_rec(recommendations, recommendations_simple,
+                recommendations.append(
                     f"最終 Windows Update から {delta} 日経過しています。"
-                    "セキュリティのため更新を確認してください。",
-                    f"Windowsの更新が {delta} 日間止まっています。"
-                    "安全のため更新を確認しましょう。",
+                    "セキュリティのため更新を確認してください。"
                 )
                 score -= 20
             elif delta > 90:
-                _add_rec(recommendations, recommendations_simple,
-                    f"最終 Windows Update から {delta} 日経過しています。更新を確認してください。",
-                    f"Windowsの更新が {delta} 日間止まっています。更新を確認しましょう。",
+                recommendations.append(
+                    f"最終 Windows Update から {delta} 日経過しています。更新を確認してください。"
                 )
                 score -= 10
         except ValueError:
@@ -1875,29 +1652,19 @@ def analyze_system_health(specs: PCSpecs) -> ComponentScore:
     if specs.last_windows_update:
         parts.append(f"最終更新: {specs.last_windows_update}")
     current_val = " / ".join(parts)
-    current_simple = (
-        f"自動で立ち上がるアプリ {specs.startup_app_count} 個 / "
-        f"SSDお手入れ機能 {'オン' if specs.trim_enabled else 'オフ'}"
-    )
 
     if score >= 80:
         notes = "システム設定は最適化されています。"
-        notes_simple = "Windowsの設定はよく整っています。"
     elif score >= 60:
         notes = "一部の設定を見直すとパフォーマンスが向上します。"
-        notes_simple = "いくつか設定を見直すと、もっと軽くなります。"
     else:
         notes = "システム設定の最適化でコスト0円のパフォーマンス改善が期待できます。"
-        notes_simple = "設定を整えるだけで、お金をかけずに動作を軽くできそうです。"
 
     return ComponentScore(
         name="システム健全性", current_value=current_val,
         midrange_standard="TRIM有効 / バランス以上 / スタートアップ10個以下",
         status=status, score=score,
         recommendations=recommendations, upgrade_options=[], notes=notes,
-        recommendations_simple=recommendations_simple, notes_simple=notes_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple="自動起動アプリは少なめ・お手入れ機能オンが理想",
     )
 
 
@@ -1912,18 +1679,14 @@ def analyze_psu(specs: PCSpecs) -> ComponentScore:
 
     parts = [f"推定消費電力: {estimated}W", f"推奨PSU容量: {recommended}W 以上"]
     current_val = " / ".join(parts)
-    current_simple = f"今の消費電力の目安 約{estimated}W / 電源は{recommended}W以上あると安心"
 
     # 推奨容量に応じて 80Plus グレードを提案
     if recommended >= 750:
         grade_note = "80Plus Gold 以上を推奨（効率・静音性が向上）"
-        grade_note_simple = "効率のよい電源（80Plus Gold以上）だと省エネで静かです"
     elif recommended >= 550:
         grade_note = "80Plus Bronze 以上を推奨"
-        grade_note_simple = "効率のよい電源（80Plus Bronze以上）がおすすめです"
     else:
         grade_note = "80Plus Bronze 対応モデルで十分"
-        grade_note_simple = "ふつうの効率の電源で十分です"
 
     recommendations: list[str] = [
         f"CPU ({specs.cpu_name}) + GPU ({specs.gpu_name or 'なし'}) の合計 TDP から"
@@ -1931,20 +1694,12 @@ def analyze_psu(specs: PCSpecs) -> ComponentScore:
         f"余裕を持たせた推奨 PSU 容量は {recommended}W です（{grade_note}）。",
         "※ この推定値はあくまで目安です。実際のシステム構成に合わせて検討してください。",
     ]
-    recommendations_simple: list[str] = [
-        f"CPUとグラフィックの消費電力から、今の電力は約{estimated}Wと見積もりました。",
-        f"電源（電気を供給する部品）は{recommended}W以上あると安心です（{grade_note_simple}）。",
-        "※ これはあくまで目安です。パーツを増やすときの参考にしてください。",
-    ]
 
     return ComponentScore(
         name="PSU 容量推定", current_value=current_val,
         midrange_standard="推定消費電力の1.5倍を目安",
         status="meets", score=70,
         recommendations=recommendations, upgrade_options=[], notes=grade_note,
-        recommendations_simple=recommendations_simple, notes_simple=grade_note_simple,
-        current_value_simple=current_simple,
-        midrange_standard_simple="今の消費電力より少し余裕のある電源が目安",
     )
 
 
@@ -1962,33 +1717,29 @@ def calculate_overall(core_scores: list[ComponentScore]) -> dict:
         grade, label = "A", "ハイスペック"
         label_simple = "とても余裕あり"
         message = "この基準を大きく上回っています。現状のPCで快適な作業が可能です。"
-        message_simple = "この使い方には余裕たっぷりのPCです。今のままで快適に使えます。"
     elif overall >= 60:
         grade, label = "B", "基準クリア"
         label_simple = "十分つかえる"
         message = "この基準を概ね満たしています。一部のコンポーネントを改善するとより快適になります。"
-        message_simple = "この使い方にはしっかり使えるPCです。一部を改善するともっと快適になります。"
     elif overall >= 40:
         grade, label = "C", "基準以下"
         label_simple = "少し物足りない"
         message = "いくつかのコンポーネントがこの基準を下回っています。優先度の高い箇所からアップグレードを検討しましょう。"
-        message_simple = "この使い方には少し力不足な部分があります。効果の大きい所から手を入れるのがおすすめです。"
     else:
         grade, label = "D", "大幅に基準以下"
         label_simple = "力不足ぎみ"
         message = "この基準に達するには複数のコンポーネントのアップグレードが必要です。"
-        message_simple = "この使い方には力不足ぎみです。快適にするには複数の部品の見直しが必要です。"
 
     priority = sorted(
         [s for s in core_scores if s.status == "below"],
         key=lambda x: x.score,
     )
 
+    # label_simple は初心者モードでグレードのやさしい呼称として表示する（解説文ではない）
     return {
         "score": overall, "grade": grade, "label": label,
         "label_simple": label_simple,
         "message": message,
-        "message_simple": message_simple,
         "priority_upgrades": [s.name for s in priority],
     }
 
@@ -2022,20 +1773,12 @@ def _apply_laptop_constraints(scores: list[ComponentScore]) -> None:
                     "ノートPCのGPUは交換できません。GPU性能が必要な場合は、"
                     "外付けGPU(eGPU)対応機種の確認、または買い替えをご検討ください。"
                 ]
-                s.recommendations_simple = [
-                    "ノートPCは映像専用の部品（グラフィックボード）を交換できません。"
-                    "映像性能がもっと必要なら、外付けタイプの対応機種か買い替えをご検討ください。"
-                ]
         elif s.name == "マザーボード":
             s.upgrade_options = []
             if s.status == "below":
                 s.recommendations = [
                     "ノートPCのマザーボード(プラットフォーム)は交換できません。"
                     "世代が古い場合は買い替えが現実的な選択肢です。"
-                ]
-                s.recommendations_simple = [
-                    "ノートPCは本体の土台（基板）を交換できません。"
-                    "世代が古い場合は買い替えが現実的です。"
                 ]
         elif s.name == "ネットワーク":
             if s.upgrade_options:
@@ -2050,9 +1793,6 @@ def _apply_laptop_constraints(scores: list[ComponentScore]) -> None:
                 s.recommendations.append(
                     "※ ノートPCの換装可否(M.2スロットの有無・サイズ)は機種により異なります。"
                 )
-                s.recommendations_simple.append(
-                    "※ ノートPCは保存装置を交換できる機種とできない機種があります（機種によります）。"
-                )
 
 
 def _apply_desktop_notes(scores: list[ComponentScore]) -> None:
@@ -2066,9 +1806,6 @@ def _apply_desktop_notes(scores: list[ComponentScore]) -> None:
             s.recommendations.append(
                 "※ スリム型・省スペース筐体ではカードサイズ(ロープロファイル対応)と"
                 "電源容量をご確認ください。"
-            )
-            s.recommendations_simple.append(
-                "※ 薄型・小型の本体では、部品のサイズと電源の容量が合うかご確認ください。"
             )
 
 
@@ -2129,71 +1866,49 @@ def judge_replacement(profile_key: str, core_scores: list[ComponentScore],
     gpu_below = any(s.name == "GPU" and s.status == "below" for s in core_scores)
 
     reasons: list[str] = []
-    reasons_simple: list[str] = []
     if platform_old:
         reasons.append("マザーボード(プラットフォーム)がこの基準の世代要件を下回っています。"
                        "CPU交換にはマザーボード・RAMの同時交換が必要になる可能性が高いです。")
-        reasons_simple.append("本体の土台（基板）が古めです。"
-                              "CPUを替えるには土台やメモリも一緒に替えることになりがちです。")
     if below:
         reasons.append(f"基準以下のコアコンポーネントが {len(below)} 種あります"
                        f"({'・'.join(below)})。")
-        reasons_simple.append(f"力不足な主要パーツが {len(below)} つあります"
-                              f"({'・'.join(below)})。")
 
     if is_laptop and (cpu_below or gpu_below):
         # ノートPCはCPU・GPUを交換できないため、不足していれば買い替え一択に近い
         reasons.append("ノートPCはCPU・GPU・マザーボードを交換できないため、"
                        "パーツ交換で改善できる余地が限られます。")
-        reasons_simple.append("ノートPCはCPUや映像部品を交換できないため、"
-                              "部品交換で良くできる範囲が限られます。")
         if len(below) >= 2:
             verdict = "replace"
             summary = ("ノートPCでは交換できないコンポーネントが基準を下回っています。"
                        "性能を改善するには買い替えが現実的です。")
-            summary_simple = ("ノートPCで交換できない部分が力不足です。"
-                              "快適にするには買い替えが現実的です。")
         else:
             verdict = "consider"
             summary = ("ノートPCのため交換による改善余地が限られます。"
                        "用途に支障がある場合は買い替えをご検討ください。")
-            summary_simple = ("ノートPCのため部品交換でできることが限られます。"
-                              "困ることがあれば買い替えもご検討ください。")
     elif platform_old and (len(below) >= 3 or (cpu_below and len(below) >= 2)):
         verdict = "replace"
         summary = ("プラットフォーム一新を含む大規模な交換が必要なため、"
                    "パーツ単位の延命より新しいPCへの買い替えのほうが割安になる可能性が高いです。")
-        summary_simple = ("土台ごと大がかりに替える必要があるため、"
-                          "部品を足すより新しいPCへの買い替えの方がお得になりがちです。")
     elif platform_old and len(below) >= 1:
         verdict = "consider"
         summary = ("アップグレードは可能ですが、プラットフォームが古いため"
                    "投資効果が限定的です。買い替えとの価格比較をおすすめします。")
-        summary_simple = ("部品の追加はできますが、土台が古いので効果は限定的です。"
-                          "買い替えと値段を比べてみるのがおすすめです。")
     elif len(below) >= 3:
         verdict = "consider"
         summary = ("複数のパーツ交換が必要です。合計費用によっては"
                    "買い替えのほうが効率的な場合があります。")
-        summary_simple = ("いくつかの部品を替える必要があります。合計額によっては"
-                          "買い替えの方がお得なこともあります。")
     else:
         verdict = "upgrade"
         summary = ("不足しているパーツの交換だけで十分に改善できます。"
                    "部分アップグレードでの延命がおすすめです。")
-        summary_simple = ("足りない部品を替えるだけで十分よくなります。"
-                          "必要な所だけ手を入れるのがおすすめです。")
         if not below:
             reasons = ["コアコンポーネントはこの基準を満たしています。"]
-            reasons_simple = ["主要なパーツはこの使い方に足りています。"]
 
     bto_table = BTO_SUGGESTIONS_LAPTOP if is_laptop else BTO_SUGGESTIONS
     return {
         "verdict": verdict,            # "upgrade" | "consider" | "replace"
         "summary": summary,
-        "summary_simple": summary_simple,
         "reasons": reasons,
-        "reasons_simple": reasons_simple,
         "bto": bto_table.get(profile_key),
     }
 
@@ -2208,11 +1923,6 @@ def _score_to_dict(s: ComponentScore) -> dict:
         "midrange_standard": s.midrange_standard, "status": s.status, "score": s.score,
         "recommendations": s.recommendations, "upgrade_options": s.upgrade_options,
         "notes": s.notes,
-        # 初心者向け表示用（空なら詳細版にフォールバック）
-        "current_value_simple": s.current_value_simple,
-        "midrange_standard_simple": s.midrange_standard_simple,
-        "recommendations_simple": s.recommendations_simple,
-        "notes_simple": s.notes_simple,
     }
 
 

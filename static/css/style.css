@@ -597,10 +597,13 @@ html[data-reduce-motion="on"] * {
   animation: none !important;
 }
 
-/* ===== 初心者モード: パーツ別解説・システム情報を隠す ===== */
-/* 総合評価と買い替え判定のみに絞り、技術的な詳細は出さない */
+/* ===== 初心者モード: 分析結果のみ表示し、解説文を隠す ===== */
+/* グレード・スコアと買い替え判定の結論に絞り、説明文や技術的な詳細は出さない */
 html[data-mode="simple"] #sysinfo-card,
-html[data-mode="simple"] #components-section {
+html[data-mode="simple"] #components-section,
+html[data-mode="simple"] #overall-message,
+html[data-mode="simple"] #replacement-summary,
+html[data-mode="simple"] #replacement-reasons {
   display: none;
 }
 

@@ -2,8 +2,7 @@ const ICONS = {
   CPU: "⚡", RAM: "🧠", GPU: "🎮", "ストレージ": "💾",
   "ディスプレイ": "🖥️", "ネットワーク": "🌐", "マザーボード": "📋",
 };
-const STATUS_LABEL        = { below: "基準以下",   meets: "この基準OK",  exceeds: "基準超え" };
-const STATUS_LABEL_SIMPLE = { below: "力不足ぎみ", meets: "ちょうどOK",  exceeds: "余裕あり" };
+const STATUS_LABEL = { below: "基準以下", meets: "この基準OK", exceeds: "基準超え" };
 
 let currentData = null;
 let currentProfile = "mid";
@@ -49,6 +48,7 @@ function applySettings() {
 }
 
 // 設定モードに応じて初心者向け/詳細のテキストを選ぶ（平易版が空なら詳細版へフォールバック）
+// 初心者モードでグレードのやさしい呼称を選ぶ（simpleが無ければ詳細ラベル）
 function pickText(detailed, simple) {
   return (settings.mode === "simple" && simple) ? simple : detailed;
 }
@@ -219,12 +219,10 @@ function renderReplacement(rep) {
   const verdictEl = document.getElementById("replacement-verdict");
   verdictEl.textContent = info.label;
   verdictEl.className = `replacement-verdict ${info.cls}`;
-  document.getElementById("replacement-summary").textContent =
-    pickText(rep.summary, rep.summary_simple);
+  document.getElementById("replacement-summary").textContent = rep.summary;
 
-  const reasons = pickText(rep.reasons, rep.reasons_simple) || [];
   const reasonsEl = document.getElementById("replacement-reasons");
-  reasonsEl.innerHTML = reasons.map(r => `<li>${r}</li>`).join("");
+  reasonsEl.innerHTML = (rep.reasons || []).map(r => `<li>${r}</li>`).join("");
 
   const btoSection = document.getElementById("bto-section");
   const btoList = document.getElementById("bto-list");
@@ -318,8 +316,8 @@ function renderOverall(overall) {
   document.getElementById("overall-label").textContent =
     pickText(overall.label, overall.label_simple);
   document.getElementById("overall-score-val").textContent = overall.score;
-  document.getElementById("overall-message").textContent =
-    pickText(overall.message, overall.message_simple);
+  // 説明メッセージは詳細モードのみ表示（初心者モードはCSSで非表示）
+  document.getElementById("overall-message").textContent = overall.message;
 
   const pList = document.getElementById("priority-list");
   pList.innerHTML = "";
@@ -384,17 +382,11 @@ function renderComponents(scores) {
 
 function buildComponentCard(s) {
   const icon        = ICONS[s.name] || "🔧";
-  const statusMap   = settings.mode === "simple" ? STATUS_LABEL_SIMPLE : STATUS_LABEL;
-  const statusLabel = statusMap[s.status] || s.status;
+  const statusLabel = STATUS_LABEL[s.status] || s.status;
 
-  const currentValue = pickText(s.current_value, s.current_value_simple);
-  const standard     = pickText(s.midrange_standard, s.midrange_standard_simple);
-  const notes        = pickText(s.notes, s.notes_simple);
-  const recList      = pickText(s.recommendations, s.recommendations_simple) || [];
-
-  const recs = recList.length > 0
+  const recs = s.recommendations.length > 0
     ? `<div class="recommendations">
-        ${recList.map(r => `<div class="rec-item">${r}</div>`).join("")}
+        ${s.recommendations.map(r => `<div class="rec-item">${r}</div>`).join("")}
        </div>`
     : "";
 
@@ -436,12 +428,12 @@ function buildComponentCard(s) {
 
       <div class="comp-current">
         <div class="comp-current-label">現在のスペック</div>
-        <div class="comp-current-val">${currentValue}</div>
+        <div class="comp-current-val">${s.current_value}</div>
       </div>
 
-      <div class="comp-standard">${standard}</div>
+      <div class="comp-standard">${s.midrange_standard}</div>
 
-      ${notes ? `<div class="comp-notes">${notes}</div>` : ""}
+      ${s.notes ? `<div class="comp-notes">${s.notes}</div>` : ""}
 
       ${recs}
       ${upgrades}
@@ -504,7 +496,7 @@ function drawShareCard() {
   ctx.fillText(`スコア ${overall.score} / 100`, 400, 320);
   ctx.fillStyle = gradeColor;
   ctx.font = "bold 36px 'Segoe UI', 'Yu Gothic UI', sans-serif";
-  ctx.fillText(overall.label, 400, 375);
+  ctx.fillText(pickText(overall.label, overall.label_simple), 400, 375);
   ctx.fillStyle = "#8b90a7";
   ctx.font = "26px 'Segoe UI', 'Yu Gothic UI', sans-serif";
   ctx.fillText(`評価基準: ${p.label}`, 400, 420);
