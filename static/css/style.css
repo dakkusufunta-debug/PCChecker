@@ -343,20 +343,29 @@ body {
 .profile-tabs-buttons {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-bottom: 12px;
 }
+/* 1行に収まらないとJSが付与。各ボタンを1行ずつの縦並びにする */
+.profile-tabs-buttons.stacked {
+  flex-direction: column;
+}
 .profile-tab {
+  /* 3つを等幅で1行に並べ、狭い幅でも折り返さず均等に縮める */
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 10px 22px;
+  padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid var(--card-border);
   background: var(--bg2);
   color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -368,11 +377,6 @@ body {
 }
 .profile-tab-icon { font-size: 1.1rem; }
 .profile-desc { color: var(--text-muted); font-size: 0.88rem; margin: 0; }
-
-@media (max-width: 600px) {
-  .profile-tabs-buttons { flex-direction: column; }
-  .profile-tab { width: 100%; justify-content: center; }
-}
 
 /* ===== UTILS ===== */
 .hidden { display: none !important; }
@@ -612,12 +616,16 @@ html[data-mode="simple"] #replacement-reasons {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
+  /* 極端に狭い幅＋大きい文字でもはみ出さないよう、必要なら折り返す */
+  flex-wrap: wrap;
 }
+.header-title { min-width: 0; }
 .header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto; /* 折り返した時も右寄せを維持 */
 }
 .header-btn {
   background: var(--card);
@@ -729,5 +737,9 @@ html[data-mode="simple"] #replacement-reasons {
 
 @media (max-width: 560px) {
   .setting-row { flex-direction: column; align-items: stretch; gap: 10px; }
-  .segmented { align-self: flex-start; }
+  /* 設定項目を縦積みにしたら、セグメントは全幅・等幅で1行に並べる。
+     収まらない場合はJSが .stacked を付け、1行1ボタンの均等幅にする */
+  .segmented { align-self: stretch; flex-wrap: nowrap; }
+  .seg-btn { flex: 1 1 0; min-width: 0; }
+  .segmented.stacked { flex-direction: column; }
 }

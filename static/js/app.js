@@ -80,6 +80,12 @@ function changeSetting(key, value) {
     if (key === "defaultProfile") currentProfile = resolveProfile();
     applyProfile(currentProfile);
   }
+
+  // 文字サイズ変更はボタンの幅を変えるので、縦積み要否を測り直す
+  if (key === "fontSize") {
+    layoutProfileTabs();
+    layoutSettingsSegments();
+  }
 }
 
 // defaultProfile 設定を実際のプロファイルキーに解決する（auto はサーバー既定）
@@ -92,6 +98,8 @@ function resolveProfile() {
 
 function openSettings() {
   document.getElementById("settings-overlay").classList.remove("hidden");
+  // 表示後に各セグメントの収まりを測って縦積み要否を決める
+  requestAnimationFrame(layoutSettingsSegments);
 }
 function closeSettings() {
   document.getElementById("settings-overlay").classList.add("hidden");
@@ -146,6 +154,9 @@ function renderResult(data) {
   show("result-section");
   hide("loading-section");
 
+  // ボタンが1行に収まるか測ってから縦積み要否を決める
+  layoutProfileTabs();
+
   // バーアニメーション
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -154,6 +165,40 @@ function renderResult(data) {
     });
   });
 }
+
+// ボタン群が1行に収まらなければ縦積み(.stacked = 1行1ボタン)へ切り替える。
+// 等幅(flex:1)で並べたとき、どれか1つでも文字がはみ出す(scrollWidth>clientWidth)
+// かで判定するため、固定の画面幅ではなく実際の内容幅・文字サイズに追従する。
+// 縦積み時も横並び時もボタン幅は均等になる。
+function fitOrStack(container) {
+  if (!container) return;
+  // いったん横並びに戻して測定し、はみ出すなら縦積みにする
+  container.classList.remove("stacked");
+  const overflow = [...container.children]
+    .some(el => el.scrollWidth > el.clientWidth + 1);
+  container.classList.toggle("stacked", overflow);
+}
+
+// プロファイル切替ボタン
+function layoutProfileTabs() {
+  fitOrStack(document.querySelector(".profile-tabs-buttons"));
+}
+
+// 設定画面のセグメント切替（各グループを個別に判定）
+function layoutSettingsSegments() {
+  document.querySelectorAll(".segmented[data-setting]").forEach(fitOrStack);
+}
+
+// 画面リサイズに追従（描画コストを抑えるため次フレームでまとめて再判定）
+let _layoutRaf = 0;
+window.addEventListener("resize", () => {
+  if (_layoutRaf) return;
+  _layoutRaf = requestAnimationFrame(() => {
+    _layoutRaf = 0;
+    layoutProfileTabs();
+    layoutSettingsSegments();
+  });
+});
 
 function setupProfileTabs() {
   document.querySelectorAll(".profile-tab").forEach(btn => {
