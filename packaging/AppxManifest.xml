@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+
+  <Identity
+    Name="Mirato.PCChecker"
+    Publisher="CN=3F06A858-7418-4AB5-A1BD-FD856E9B75B0"
+    Version="1.0.0.0"
+    ProcessorArchitecture="x64" />
+  <!-- Partner Center「製品識別の確認」より反映(2026-06-16)。Store ID: 9PJ0X9T3PDGL / PFN: Mirato.PCChecker_n9bj028cvzf5c -->
+
+  <Properties>
+    <DisplayName>PCChecker</DisplayName>
+    <PublisherDisplayName>Mirato</PublisherDisplayName>
+    <!-- 屋号「Mirato」。Partner Centerの発行元表示名と完全一致させること(2026-06-16確定) -->
+    <Logo>images\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily
+      Name="Windows.Desktop"
+      MinVersion="10.0.17763.0"
+      MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="ja-jp" />
+  </Resources>
+
+  <Applications>
+    <Application
+      Id="PCChecker"
+      Executable="PCChecker.exe"
+      EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="PCChecker"
+        Description="Windows PCのスペックをローカルで診断し、用途に合わせたアップグレード候補を提示します。"
+        BackgroundColor="#101820"
+        Square44x44Logo="images\Square44x44Logo.png"
+        Square150x150Logo="images\Square150x150Logo.png">
+        <uap:DefaultTile
+          Square71x71Logo="images\Square71x71Logo.png"
+          Wide310x150Logo="images\Wide310x150Logo.png"
+          Square310x310Logo="images\Square310x310Logo.png" />
+        <uap:SplashScreen
+          Image="images\SplashScreen.png"
+          BackgroundColor="#101820" />
+      </uap:VisualElements>
+      <!-- 純Win32アプリは EntryPoint=Windows.FullTrustApplication + runFullTrust で足りる。
+           windows.fullTrustProcess 拡張(UWP本体が別の全権限プロセスを起動する構成用)は不要なため宣言しない。 -->
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
