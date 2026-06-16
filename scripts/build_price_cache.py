@@ -24,9 +24,12 @@ import する。PROFILES/BTO_SUGGESTIONS は単なるdictリテラルで、impor
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import types
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -48,6 +51,13 @@ from rakuten_client import (  # noqa: E402
 
 JST = timezone(timedelta(hours=9))
 CACHE_TTL_HOURS = 24
+REQUEST_TIMEOUT_SEC = 15
+
+ALERT_WEBHOOK_ENV = "PCCHECKER_ALERT_WEBHOOK"
+PRICE_MIN_HIT_RATIO_ENV = "PCCHECKER_PRICE_MIN_HIT_RATIO"
+BTO_MIN_HITS_ENV = "PCCHECKER_BTO_MIN_HITS"
+DEFAULT_PRICE_MIN_HIT_RATIO = 0.5
+DEFAULT_BTO_MIN_HITS = 1
 
 
 def parse_ref_price(price_text: str) -> int:
@@ -115,6 +125,121 @@ def build_cache() -> dict:
     }
 
 
+def _env_float(name: str, default: float) -> float:
+    """環境変数から float を読む。壊れた値なら既定値へ戻す。"""
+    try:
+        return float(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_int(name: str, default: int) -> int:
+    """環境変数から int を読む。壊れた値なら既定値へ戻す。"""
+    try:
+        return int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def summarize_cache(cache: dict) -> dict:
+    """生成済みキャッシュから健全性判定に使う件数を集計する"""
+    prices = cache.get("prices", {})
+    bto = cache.get("bto", {})
+    generated_at = cache.get("generated_at")
+    if not generated_at:
+        generated_at = datetime.now(JST).isoformat(timespec="seconds")
+    return {
+        "generated_at": generated_at,
+        "price_hits": sum(1 for v in prices.values() if v),
+        "price_total": len(prices),
+        "bto_hits": sum(1 for v in bto.values() if v),
+        "bto_total": len(bto),
+    }
+
+
+def evaluate_health(cache: dict | None = None,
+                    exception: Exception | None = None) -> dict:
+    """収集結果が配信に使える状態か判定する"""
+    if exception is not None:
+        return {
+            "healthy": False,
+            "reasons": [f"収集中に例外が発生: {type(exception).__name__}: {exception}"],
+            "generated_at": datetime.now(JST).isoformat(timespec="seconds"),
+            "price_hits": 0,
+            "price_total": 0,
+            "bto_hits": 0,
+            "bto_total": 0,
+        }
+
+    if cache is None:
+        raise ValueError("cache または exception のどちらかが必要です")
+
+    summary = summarize_cache(cache)
+    reasons: list[str] = []
+    price_min_ratio = _env_float(PRICE_MIN_HIT_RATIO_ENV, DEFAULT_PRICE_MIN_HIT_RATIO)
+    bto_min_hits = _env_int(BTO_MIN_HITS_ENV, DEFAULT_BTO_MIN_HITS)
+
+    price_hits = summary["price_hits"]
+    price_total = summary["price_total"]
+    if price_total > 0 and price_hits / price_total < price_min_ratio:
+        reasons.append(
+            f"価格ヒット数がしきい値未満: {price_hits}/{price_total} "
+            f"({price_min_ratio:.0%} 未満)"
+        )
+    if summary["bto_hits"] < bto_min_hits:
+        reasons.append(
+            f"BTOヒット数がしきい値未満: {summary['bto_hits']}件 "
+            f"(最低 {bto_min_hits}件)"
+        )
+
+    return {"healthy": not reasons, "reasons": reasons, **summary}
+
+
+def build_alert_message(health: dict) -> str:
+    """Discord互換Webhookへ送る本文を組み立てる"""
+    reasons = " / ".join(health.get("reasons") or ["理由不明"])
+    return (
+        "[PCChecker] 価格キャッシュ更新の異常を検知しました\n"
+        f"理由: {reasons}\n"
+        f"価格ヒット: {health.get('price_hits', 0)}/{health.get('price_total', 0)}\n"
+        f"BTOヒット: {health.get('bto_hits', 0)}/{health.get('bto_total', 0)}\n"
+        f"generated_at: {health.get('generated_at', '')}\n"
+        "対処ヒント: 楽天IP許可リストの再確認(eo光IP変動の可能性)を行ってください。"
+    )
+
+
+def _http_post_json(url: str, payload: dict) -> int:
+    """JSONをPOSTし、HTTPステータスコードを返す。テストで差し替え可能。"""
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=body, method="POST",
+        headers={"Content-Type": "application/json", "User-Agent": "PCChecker"},
+    )
+    with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SEC) as res:
+        return res.status
+
+
+def notify_unhealthy(health: dict) -> dict:
+    """異常時のWebhook通知をベストエフォートで送る"""
+    url = os.environ.get(ALERT_WEBHOOK_ENV, "").strip()
+    if not url:
+        print(f"WARNING: {ALERT_WEBHOOK_ENV} が未設定のため異常通知をスキップしました。",
+              file=sys.stderr)
+        return {"ok": False, "reason": "not_configured"}
+
+    payload = {"content": build_alert_message(health)}
+    try:
+        status = _http_post_json(url, payload)
+    except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:
+        print(f"WARNING: 異常通知の送信に失敗しました: {exc}", file=sys.stderr)
+        return {"ok": False, "reason": "network_error"}
+
+    if 200 <= status < 300:
+        return {"ok": True}
+    print(f"WARNING: 異常通知の送信先がエラーを返しました: HTTP {status}", file=sys.stderr)
+    return {"ok": False, "reason": "server_error"}
+
+
 def main(argv: list[str]) -> int:
     if not is_configured():
         print("ERROR: 有効な .env(楽天APIキー)が見つかりません。"
@@ -125,15 +250,28 @@ def main(argv: list[str]) -> int:
     out_path = Path(argv[1]) if len(argv) > 1 else _ROOT / "dist_cache" / "price_cache.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    cache = build_cache()
+    try:
+        cache = build_cache()
+    except Exception as exc:
+        health = evaluate_health(exception=exc)
+        print(f"ERROR: 価格キャッシュ生成に失敗しました: {exc}", file=sys.stderr)
+        notify_unhealthy(health)
+        return 1
+
     out_path.write_text(
         json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    hits = sum(1 for v in cache["prices"].values() if v)
-    bto_hits = sum(1 for v in cache["bto"].values() if v)
+    health = evaluate_health(cache)
+    hits = health["price_hits"]
+    bto_hits = health["bto_hits"]
     print(f"\n生成完了: {out_path}")
     print(f"  価格: {hits}/{len(cache['prices'])} 件ヒット")
     print(f"  BTO : {bto_hits}/{len(cache['bto'])} キーワードでヒット")
+    if not health["healthy"]:
+        print("WARNING: 価格キャッシュ生成結果が異常です: "
+              + " / ".join(health["reasons"]), file=sys.stderr)
+        notify_unhealthy(health)
+        return 1
     return 0
 
 

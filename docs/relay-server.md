@@ -54,6 +54,67 @@ python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json
 
 ---
 
+## 更新停止の通知（健全性アラート）
+
+自宅PCなど固定IPではない環境で日次バッチを動かす場合、eo光などのグローバルIPが
+変動すると楽天デベロッパーのIP許可リストと不一致になり、APIが拒否されて価格更新が
+ほぼ全滅することがある。`scripts/build_price_cache.py` は生成後にヒット件数を確認し、
+以下のいずれかなら異常として終了コードを非0にする。
+
+- バッチ実行中に例外が発生した
+- 価格ヒット数が総数の50%未満
+- BTOヒットが0件
+
+異常時に通知を受けるには、実行環境に `PCCHECKER_ALERT_WEBHOOK` を設定する。
+
+```powershell
+# Windows タスクスケジューラで使うユーザー環境変数として設定する例
+[Environment]::SetEnvironmentVariable(
+  "PCCHECKER_ALERT_WEBHOOK",
+  "https://discord.com/api/webhooks/....",
+  "User"
+)
+```
+
+```bash
+# Linux / cron で使う例
+export PCCHECKER_ALERT_WEBHOOK="https://discord.com/api/webhooks/...."
+python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json
+```
+
+Discord Webhook が最も手軽。Discord の「サーバー設定」→「連携サービス」→
+「ウェブフック」で作成し、発行された Webhook URL を `PCCHECKER_ALERT_WEBHOOK` に設定する。
+送信形式は `{"content": "..."}` の単純なJSONなので、Discord互換の受信先や汎用Webhookにも
+流用できる。
+
+通知例:
+
+```text
+[PCChecker] 価格キャッシュ更新の異常を検知しました
+理由: 価格ヒット数がしきい値未満: 0/60 (50% 未満) / BTOヒット数がしきい値未満: 0件 (最低 1件)
+価格ヒット: 0/60
+BTOヒット: 0/6
+generated_at: 2026-06-16T05:00:00+09:00
+対処ヒント: 楽天IP許可リストの再確認(eo光IP変動の可能性)を行ってください。
+```
+
+この通知が届いたら、現在のグローバルIPを確認し、楽天デベロッパーのアプリ設定で
+IP許可リストを更新する。APIキーの期限切れでも同様にヒット数が大きく落ちるため、
+アプリ設定画面でキーの有効期限も確認する。
+
+しきい値は必要に応じて環境変数で調整できる。
+
+```bash
+PCCHECKER_PRICE_MIN_HIT_RATIO=0.5  # 価格ヒット率の下限
+PCCHECKER_BTO_MIN_HITS=1           # BTOヒット数の下限
+```
+
+`PCCHECKER_ALERT_WEBHOOK` が未設定の場合、通知は送らず標準エラーに警告だけを出す。
+通知先の一時障害でもバッチ本体は通知失敗では落とさないが、生成結果が異常なら
+タスクスケジューラやcronで検知できるよう終了コードは非0になる。
+
+---
+
 ## 2. 配信層：Cloudflare Pages / R2
 
 固定IPは**不要**（楽天を叩くのは収集層だけ）。静的JSONを配るだけなので高速・安価・DDoS耐性が高い。
