@@ -1719,7 +1719,7 @@ def calculate_overall(core_scores: list[ComponentScore]) -> dict:
         message = "この基準を大きく上回っています。現状のPCで快適な作業が可能です。"
     elif overall >= 60:
         grade, label = "B", "基準クリア"
-        label_simple = "十分つかえる"
+        label_simple = "基準クリア"
         message = "この基準を概ね満たしています。一部のコンポーネントを改善するとより快適になります。"
     elif overall >= 40:
         grade, label = "C", "基準以下"
