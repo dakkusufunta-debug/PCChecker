@@ -63,8 +63,7 @@ def test_landing_page_contains_required_product_claims():
     text = _read_landing_page()
 
     required_phrases = [
-        "あなたのPC、まだ戦えますか？ 無料で即診断",
-        "Microsoft Storeでの公開準備中",
+        "あなたのPC、まだ使えますか？ 無料で即診断",
         "日本語・無料・即時",
         "買い替え/アップグレード判定",
         "PC構成情報は既定で外部送信されません",
