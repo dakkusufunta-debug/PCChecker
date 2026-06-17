@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCスペック確認方法｜性能の調べ方</title>
+  <meta name="description" content="PCのスペックを確認する方法を、Windows設定、タスクマネージャー、無料診断ツールの順に初心者向けに解説します。" />
+  <meta property="og:title" content="PCのスペックを確認する方法｜初心者でも無料でできる手順【2026年版】" />
+  <meta property="og:description" content="パソコン性能の調べ方を、CPU、メモリ、GPU、ストレージ別にわかりやすく整理します。" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://dakkusufunta-debug.github.io/PCChecker/blog/check-pc-spec.html" />
+  <meta property="og:image" content="../img/screen1.png" />
+  <link rel="stylesheet" href="../lp.css" />
+  <link rel="stylesheet" href="blog.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../index.html">PCChecker</a>
+    <nav class="nav" aria-label="ブログナビゲーション">
+      <a href="index.html">ブログ</a>
+      <a href="../index.html">アプリ</a>
+      <a href="../privacy-policy.html">プライバシー</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="blog-hero">
+      <div class="blog-hero-inner">
+        <p class="eyebrow">スペック確認</p>
+        <h1>PCのスペックを確認する方法｜初心者でも無料でできる手順【2026年版】</h1>
+        <p class="blog-meta">公開日: 2026-06-17 / 更新日: 2026-06-17</p>
+        <p class="blog-lead">自分のPCがどれくらいの性能なのか、どこを見ればよいかわからない人は多いです。結論として、まずCPU、メモリ、GPU、ストレージの4項目を確認すれば、日常利用で困るかどうかの大枠は判断できます。</p>
+      </div>
+    </section>
+
+    <article class="blog-layout blog-article">
+      <h2>まず結論: 4項目を見ると性能の全体像がわかる</h2>
+      <p>PCのスペック確認方法で最初に見るべきなのは、CPU、メモリ、GPU、ストレージです。CPUは処理の中心、メモリは同時作業の余裕、GPUは映像処理やゲーム性能、ストレージは保存容量と読み書き速度に関係します。</p>
+      <p>文書作成、Web閲覧、動画視聴が中心なら、極端に古いCPUでなく、メモリ8GB以上、SSD搭載であれば使える場面が多いです。Web会議、写真編集、開発、ゲームをするなら、メモリ16GB以上や用途に合ったGPUを見たいところです。</p>
+
+      <h2>判断の具体的基準</h2>
+      <p>性能の良し悪しは用途で変わります。次の表は、2026年時点で一般的なWindows PCを選ぶ・確認する際の目安です。すべての用途を保証するものではありませんが、最初の判断材料になります。</p>
+      <div class="blog-table-wrap">
+        <table class="blog-table">
+          <thead>
+            <tr>
+              <th>用途</th>
+              <th>CPU</th>
+              <th>メモリ</th>
+              <th>ストレージ/GPU</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>メール、文書、Web</td>
+              <td>近年のCore i3/Ryzen 3相当以上</td>
+              <td>8GB以上</td>
+              <td>SSD推奨、内蔵GPUで可</td>
+            </tr>
+            <tr>
+              <td>Web会議、複数アプリ</td>
+              <td>Core i5/Ryzen 5相当以上</td>
+              <td>16GB以上</td>
+              <td>SSD、安定したネットワーク</td>
+            </tr>
+            <tr>
+              <td>写真編集、軽い動画編集</td>
+              <td>Core i5/Ryzen 5以上</td>
+              <td>16〜32GB</td>
+              <td>SSD、用途によりGPU</td>
+            </tr>
+            <tr>
+              <td>ゲーム、3D、AI系作業</td>
+              <td>Core i5/Ryzen 5以上を目安</td>
+              <td>16〜32GB以上</td>
+              <td>専用GPU、十分な電源と冷却</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>「パソコン性能の調べ方」で大切なのは、型番を見て終わりにしないことです。たとえば同じCore i5でも世代や消費電力で性能が変わり、同じSSDでも容量不足なら快適さは落ちます。</p>
+
+      <h2>自分のPCで確認する方法</h2>
+      <p>Windowsの「設定」から確認する場合は、「システム」→「バージョン情報」を開きます。ここでプロセッサ、実装RAM、システムの種類、Windowsのエディションを確認できます。</p>
+      <p>動作中の状態を見る場合は、タスクバーを右クリックして「タスク マネージャー」を開き、「パフォーマンス」タブを選びます。CPU、メモリ、ディスク、GPUの使用率が表示されるため、重いと感じるときにどこが詰まっているかを見られます。</p>
+      <p>GPUは「設定」→「システム」→「ディスプレイ」→「ディスプレイの詳細設定」でも確認できます。より詳しく見るなら「デバイス マネージャー」の「ディスプレイ アダプター」も参考になります。</p>
+      <p>複数の画面を行き来せず、スペック確認から判断までまとめたい場合は、無料のWindows PC診断アプリ <a href="../index.html">PCChecker</a> が使えます。PCCheckerはWMIやpsutilなどでPC構成をローカル取得し、総合スコア、部品別評価、買い替え/アップグレード判定、楽天市場の参考価格を表示します。診断情報は既定で外部送信されません。</p>
+      <img src="../img/screen2.png" alt="PCCheckerの詳細スコアとPC構成画面" loading="lazy" />
+      <div class="cta-box">
+        <p><strong>スペック確認を自動化する</strong></p>
+        <p>CPU、GPU、メモリ、ストレージをまとめて確認し、用途に対して十分かを日本語でチェックできます。</p>
+        <div class="cta-actions">
+          <a class="store-button" href="https://apps.microsoft.com/detail/9PJ0X9T3PDGL" target="_blank" rel="noopener">Microsoft Storeで入手</a>
+          <a class="secondary-link" href="../index.html">PCCheckerの詳細を見る</a>
+        </div>
+        <p class="blog-meta">※Storeで公開準備中</p>
+      </div>
+
+      <h2>おすすめパーツ/構成: 楽天市場で探せる候補</h2>
+      <p>スペック確認の結果、弱い部分がはっきりしたら、買い替え前にパーツや構成を比較します。デスクトップPCは交換しやすい一方、ノートPCはメモリやSSDが基板直付けで交換できない場合があります。</p>
+      <div class="blog-table-wrap">
+        <table class="blog-table">
+          <thead>
+            <tr>
+              <th>確認結果</th>
+              <th>探す候補</th>
+              <th>注意点</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>メモリ不足</td>
+              <td>DDR4/DDR5メモリ、16GBまたは32GB</td>
+              <td>規格、空きスロット、最大容量を確認</td>
+            </tr>
+            <tr>
+              <td>保存容量不足</td>
+              <td>NVMe SSD、SATA SSD、外付けSSD</td>
+              <td>接続方式と物理サイズを確認</td>
+            </tr>
+            <tr>
+              <td>全体的に性能不足</td>
+              <td>用途別の新品PC、BTO PC</td>
+              <td>CPU世代、保証、メモリ16GB以上を目安</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- TODO: 楽天アフィリエイトリンク(affiliateId/scid)を公開前に設定 -->
+      <div class="affiliate-box">
+        <p><strong>アフィリエイト開示:</strong> このページには、楽天市場の商品リンクなど成果報酬型のアフィリエイトリンクが含まれる場合があります。商品名や価格は変動するため、購入前に最新情報を確認してください。</p>
+      </div>
+
+      <h2>よくある質問</h2>
+      <h3>PCスペックはどこを見ればいいですか?</h3>
+      <p>まずはCPU、メモリ、GPU、ストレージを見ます。用途が軽いならメモリとSSD、ゲームや編集をするならGPUとCPUも重要です。</p>
+      <h3>型番だけで性能はわかりますか?</h3>
+      <p>ある程度はわかりますが、世代、消費電力、冷却、メモリ容量、ストレージ構成で体感は変わります。型番と実使用時の負荷を合わせて見るのが確実です。</p>
+      <h3>無料ツールを使うのは不安です</h3>
+      <p>ツールを選ぶときは、何を取得し、外部送信があるかを確認してください。PCCheckerは診断処理をローカルで行い、診断情報は既定で外部送信されません。詳細は <a href="../privacy-policy.html">プライバシーポリシー</a> を確認できます。</p>
+
+      <h2>まとめ</h2>
+      <p>PCのスペックを確認する方法は、Windows標準機能だけでも可能です。ただし、数値を見て「買い替えるべきか」「どこを強化すべきか」まで判断するには、複数の情報を組み合わせる必要があります。</p>
+      <ul class="related-list">
+        <li><a href="pc-replace-timing.html">パソコンの買い替え時期の目安｜5つのサインと判断基準</a></li>
+        <li><a href="memory-upgrade.html">メモリ増設の効果と選び方｜何GB必要？失敗しない手順</a></li>
+      </ul>
+      <div class="cta-box">
+        <p><strong>PCCheckerで性能をまとめて確認</strong></p>
+        <p>無料でPCスペックを診断し、部品別の評価と買い替え/アップグレードの目安を表示します。</p>
+        <div class="cta-actions">
+          <a class="store-button" href="https://apps.microsoft.com/detail/9PJ0X9T3PDGL" target="_blank" rel="noopener">Microsoft Storeで入手</a>
+          <a class="secondary-link" href="../index.html">LPを見る</a>
+        </div>
+        <p class="blog-meta">※Storeで公開準備中</p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="blog-footer">
+    <div class="blog-footer-inner">
+      <p>提供元 Mirato</p>
+      <p><a href="../privacy-policy.html">プライバシーポリシー</a></p>
+      <p>価格・商品情報は参考情報です。掲載リンクには成果報酬型のアフィリエイトリンクが含まれる場合があります。</p>
+      <p>&copy;2026 Mirato</p>
+    </div>
+  </footer>
+</body>
+</html>

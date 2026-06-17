@@ -491,7 +491,7 @@ function buildComponentCard(s) {
 // ---------------------------------------------------------------------------
 
 const GRADE_COLORS = { A: "#00d4aa", B: "#6c63ff", C: "#ffd460", D: "#ff5f6d" };
-const SHARE_URL = "https://github.com/dakkusufunta-debug/PCChecker";
+const SHARE_URL = "https://dakkusufunta-debug.github.io/PCChecker/";
 
 function drawShareCard() {
   const p = currentData.profiles[currentProfile];
