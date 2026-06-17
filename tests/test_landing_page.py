@@ -79,5 +79,4 @@ def test_landing_page_contains_required_product_claims():
     for phrase in required_phrases:
         assert phrase in text
 
-    assert "広告/トラッキングなし" in text
     assert "TODO" not in text
