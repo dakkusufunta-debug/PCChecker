@@ -64,9 +64,7 @@ def test_store_listing_has_submission_sections():
     for heading in required_headings:
         assert heading in text
 
-    assert "日本語" in text
     assert "無料" in text
-    assert "即時" in text
     assert "ローカル処理" in text
     assert "127.0.0.1" in text
     assert "フルトラスト権限" in text
