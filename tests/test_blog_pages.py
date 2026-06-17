@@ -65,7 +65,7 @@ def test_blog_pages_exist_and_have_required_seo():
         assert 'property="og:title"' in text
         assert 'property="og:description"' in text
         assert 'property="og:type" content="article"' in text
-        assert 'property="og:image" content="../img/screen1.png"' in text
+        assert 'property="og:image" content="https://dakkusufunta-debug.github.io/PCChecker/img/screen1.png"' in text
         assert 'rel="stylesheet" href="../lp.css"' in text
         assert 'rel="stylesheet" href="blog.css"' in text
         assert parser.h1_count == 1
@@ -85,7 +85,7 @@ def test_blog_pages_have_required_cta_disclosure_and_related_links():
         parser = _BlogPageParser()
         parser.feed(text)
 
-        assert "※Storeで公開準備中" in text
+        assert "公開準備中" not in text
         assert "アフィリエイト開示" in text
         assert "成果報酬型のアフィリエイトリンク" in text
         assert "診断情報は既定で外部送信されません" in text

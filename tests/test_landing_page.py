@@ -41,7 +41,7 @@ def test_landing_page_has_required_seo_and_links():
     assert 'property="og:title"' in text
     assert 'property="og:description"' in text
     assert 'property="og:type" content="website"' in text
-    assert 'property="og:image" content="img/screen1.png"' in text
+    assert 'property="og:image" content="https://dakkusufunta-debug.github.io/PCChecker/img/screen1.png"' in text
     assert 'property="og:url" content="https://dakkusufunta-debug.github.io/PCChecker/"' in text
     assert "https://apps.microsoft.com/detail/9PJ0X9T3PDGL" in parser.links
     assert "privacy-policy.html" in parser.links
