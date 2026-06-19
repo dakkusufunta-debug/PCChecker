@@ -7,7 +7,6 @@ from pathlib import Path
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 BLOG_DIR = PROJECT_DIR / "docs" / "blog"
 STORE_URL = "https://apps.microsoft.com/detail/9PJ0X9T3PDGL"
-AFFILIATE_TODO = "<!-- TODO: 楽天アフィリエイトリンク(affiliateId/scid)を公開前に設定 -->"
 
 
 class _BlogPageParser(HTMLParser):
@@ -90,8 +89,9 @@ def test_blog_pages_have_required_cta_disclosure_and_related_links():
         assert "成果報酬型のアフィリエイトリンク" in text
         assert "診断情報は既定で外部送信されません" in text
         assert "提供元 Mirato" in text
-        assert AFFILIATE_TODO in text
-        assert text.count("TODO") == 1
+        # 楽天アフィリエイトの正規リンク(短縮URL)を掲載済み。TODOプレースホルダは残さない
+        assert "https://a.r10.to/" in text
+        assert "TODO" not in text
 
         for related in expected["related"]:
             assert related in parser.links
