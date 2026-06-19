@@ -13,6 +13,24 @@ import wmi
 from dataclasses import dataclass, field
 
 
+def _run_hidden(cmd, **kwargs):
+    """Windowsで外部コマンド実行時のコンソール窓を非表示にして実行する"""
+    creationflags = kwargs.pop("creationflags", 0)
+    no_window_flag = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+    if no_window_flag:
+        kwargs["creationflags"] = creationflags | no_window_flag
+        if kwargs.get("startupinfo") is None and hasattr(subprocess, "STARTUPINFO"):
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= getattr(subprocess, "STARTF_USESHOWWINDOW", 0)
+            startupinfo.wShowWindow = getattr(subprocess, "SW_HIDE", 0)
+            kwargs["startupinfo"] = startupinfo
+    elif creationflags:
+        kwargs["creationflags"] = creationflags
+
+    return subprocess.run(cmd, **kwargs)
+
+
 # ---------------------------------------------------------------------------
 # AI アクセラレータ TOPS テーブル（出典: 各社公式仕様書）
 # ---------------------------------------------------------------------------
@@ -651,7 +669,7 @@ def get_storage_health() -> list[dict]:
         "ReadErrorsTotal, WriteErrorsTotal | ConvertTo-Json -Depth 3",
     ]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        result = _run_hidden(cmd, capture_output=True, text=True, timeout=15)
         if not result.stdout:
             return []
         data = json.loads(result.stdout)
@@ -721,7 +739,7 @@ def get_system_health() -> dict:
 
     # TRIM 設定（SSD向け）
     try:
-        r = subprocess.run(
+        r = _run_hidden(
             ["fsutil", "behavior", "query", "DisableDeleteNotify"],
             capture_output=True, text=True, timeout=5,
         )
@@ -731,7 +749,7 @@ def get_system_health() -> dict:
 
     # アクティブな電源プラン
     try:
-        r = subprocess.run(
+        r = _run_hidden(
             ["powershell", "-NoProfile", "-Command",
              "Get-CimInstance -Namespace root\\cimv2\\power -ClassName Win32_PowerPlan "
              "| Where-Object IsActive -eq $true | Select-Object -ExpandProperty ElementName"],
@@ -767,7 +785,7 @@ def get_system_health() -> dict:
 
     # 最終 Windows Update 適用日
     try:
-        r = subprocess.run(
+        r = _run_hidden(
             ["powershell", "-NoProfile", "-Command",
              "(Get-HotFix | Sort-Object InstalledOn -Descending | "
              "Select-Object -First 1).InstalledOn.ToString('yyyy-MM-dd')"],

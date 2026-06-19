@@ -706,6 +706,17 @@ html[data-mode="simple"] #replacement-reasons {
   margin-top: 3px;
   line-height: 1.45;
 }
+.setting-help.success { color: var(--exceeds); }
+.setting-help.error { color: var(--below); }
+
+/* デスクトップショートカット作成(ボタン＋ステータスを縦並び) */
+.shortcut-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  text-align: right;
+}
 
 /* セグメント切替コントロール */
 .segmented {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PCChecker - PC診断・アップグレード提案</title>
   <link rel="icon" href="/static/icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="/static/css/style.css?v=20260614-10" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260619-1" />
 </head>
 <body>
   <header class="header">
@@ -209,6 +209,18 @@
             <button class="seg-btn" data-value="on">減らす</button>
           </div>
         </div>
+
+        <!-- デスクトップショートカット作成 -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">デスクトップにショートカットを作成</div>
+            <div class="setting-help">デスクトップにPCCheckerのアイコンを追加します</div>
+          </div>
+          <div class="shortcut-action">
+            <button id="create-shortcut-btn" class="seg-btn" onclick="createDesktopShortcut()">作成する</button>
+            <div id="shortcut-status" class="setting-help" role="status" aria-live="polite"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -261,6 +273,6 @@
     <p class="footer-credit">価格・商品情報は楽天市場から取得した参考値です(Supported by <a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener">Rakuten Developers</a>)。掲載リンクには成果報酬型(アフィリエイト)リンクが含まれます。</p>
   </footer>
 
-  <script src="/static/js/app.js?v=20260614-10"></script>
+  <script src="/static/js/app.js?v=20260619-1"></script>
 </body>
 </html>

@@ -1,6 +1,8 @@
 # Microsoft Store 提出手順
 
-PCChecker を Microsoft Store に提出するための MSIX パッケージ作成手順です。Partner Center の登録後に確定する値は、現時点では `packaging/AppxManifest.xml` に TODO 付きプレースホルダとして残しています。
+PCChecker を Microsoft Store に提出するための MSIX パッケージ作成手順です。
+
+> **進捗(2026-06-18時点)**: 手順1〜4は完了済み。Partner Center の個人開発者登録・アプリ名予約(Store ID `9PJ0X9T3PDGL` / PFN `Mirato.PCChecker_n9bj028cvzf5c`)・`packaging/AppxManifest.xml` への実値反映・MSIXビルド(`dist/msix/PCChecker.msix`)まで済んでいる。**残りは手順5(サイドロード動作確認)と手順6(Partner Centerへのアップロード・審査提出)のみ。**
 
 ## 1. Partner Center に登録する
 

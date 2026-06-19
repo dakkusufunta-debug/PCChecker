@@ -1,9 +1,9 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [switch]$SkipPyInstaller,
     [switch]$Sign,
     [switch]$InstallCertificate,
-    [string]$CertificateSubject = "CN=PCChecker Local Test",
+    [string]$CertificateSubject = "",
     [string]$CertificatePassword = "PCCheckerLocalTest",
     [string]$Configuration = "Release"
 )
@@ -156,6 +156,33 @@ function Invoke-SignMsix {
         [Parameter(Mandatory = $true)][string]$SignTool,
         [Parameter(Mandatory = $true)][string]$PackagePath
     )
+
+    # MSIX署名はサブジェクトがマニフェストのPublisherと完全一致する必要がある。
+    # サブジェクト未指定時はマニフェストから自動取得して不一致(0x8007000b)を防ぐ。
+    if (-not $CertificateSubject) {
+        # マニフェストはBOMなしUTF-8。Windows PowerShell 5.1の既定(CP932)で読むと
+        # 日本語コメントが壊れXMLパースに失敗するため、明示的にUTF8で読む。
+        [xml]$manifestXml = Get-Content -Raw -Encoding UTF8 -LiteralPath $ManifestPath
+        $CertificateSubject = $manifestXml.Package.Identity.Publisher
+        Write-Host "署名サブジェクトをマニフェストのPublisherから設定: $CertificateSubject"
+    }
+
+    # 既存PFXのサブジェクトが現行Publisherと異なる場合は作り直す(古い不一致証明書の使い回しを防ぐ)。
+    # Get-PfxCertificate の -Password は PS7専用のため、5.1でも動く .NET X509Certificate2 で読む。
+    if (Test-Path $PfxPath) {
+        try {
+            $existing = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 `
+                -ArgumentList $PfxPath, $CertificatePassword
+            if ($existing.Subject -ne $CertificateSubject) {
+                Write-Host "既存PFXのサブジェクト($($existing.Subject))がPublisherと不一致のため再生成します。"
+                Remove-Item -LiteralPath $PfxPath -Force
+            }
+        }
+        catch {
+            Write-Host "既存PFXを読めなかったため再生成します。"
+            Remove-Item -LiteralPath $PfxPath -Force
+        }
+    }
 
     if (-not (Test-Path $PfxPath)) {
         $cert = New-LocalSigningCertificate -Subject $CertificateSubject -PfxFile $PfxPath -Password $CertificatePassword

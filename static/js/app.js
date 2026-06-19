@@ -708,6 +708,37 @@ async function submitFeedback() {
   }
 }
 
+// デスクトップにショートカットを作成する(設定モーダルの任意操作)
+async function createDesktopShortcut() {
+  const btn = document.getElementById("create-shortcut-btn");
+  const statusEl = document.getElementById("shortcut-status");
+  btn.disabled = true;
+  statusEl.textContent = "作成中...";
+  statusEl.className = "setting-help";
+  try {
+    const res = await fetch("/api/create-desktop-shortcut", { method: "POST" });
+    const data = await res.json();
+    if (data.ok) {
+      statusEl.textContent = "デスクトップに作成しました。";
+      statusEl.className = "setting-help success";
+    } else {
+      const reasons = {
+        dev_mode: "開発実行では作成できません（配布版で利用できます）。",
+        no_pywin32: "作成に必要なコンポーネントが見つかりませんでした。",
+        unsupported_os: "Windowsでのみ利用できます。",
+        error: "作成に失敗しました。",
+      };
+      statusEl.textContent = reasons[data.reason] || "作成に失敗しました。";
+      statusEl.className = "setting-help error";
+    }
+  } catch (e) {
+    statusEl.textContent = "作成に失敗しました: " + e.message;
+    statusEl.className = "setting-help error";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // 診断未実施なら診断添付チェックを無効化する
 function refreshFeedbackDiagState() {
   const chk = document.getElementById("feedback-include-diag");

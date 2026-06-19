@@ -18,6 +18,7 @@ from app_paths import data_dir, is_frozen, resource_dir
 from pc_analyzer import run_analysis
 from rakuten_client import is_available, search_bto, search_part
 from feedback_client import submit_feedback
+from desktop_shortcut import create_desktop_shortcut
 
 app = FastAPI(title="PCChecker", version="1.0.0")
 
@@ -99,6 +100,15 @@ def feedback(body: FeedbackIn):
     diag = body.diagnostics if body.include_diagnostics else None
     try:
         return submit_feedback(body.category, body.comment, diag)
+    except Exception:
+        return {"ok": False, "reason": "error"}
+
+
+@app.post("/api/create-desktop-shortcut", response_class=JSONResponse)
+def create_desktop_shortcut_endpoint():
+    """デスクトップにPCCheckerのショートカットを作成する(任意操作)"""
+    try:
+        return create_desktop_shortcut()
     except Exception:
         return {"ok": False, "reason": "error"}
 
