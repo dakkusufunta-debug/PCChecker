@@ -2,7 +2,22 @@
 
 PCChecker を Microsoft Store に提出するための MSIX パッケージ作成手順です。
 
-> **進捗(2026-06-18時点)**: 手順1〜4は完了済み。Partner Center の個人開発者登録・アプリ名予約(Store ID `9PJ0X9T3PDGL` / PFN `Mirato.PCChecker_n9bj028cvzf5c`)・`packaging/AppxManifest.xml` への実値反映・MSIXビルド(`dist/msix/PCChecker.msix`)まで済んでいる。**残りは手順5(サイドロード動作確認)と手順6(Partner Centerへのアップロード・審査提出)のみ。**
+> **進捗(2026-06-20時点 / v1.0.1)**: 手順1〜4は完了済み。Partner Center の個人開発者登録・アプリ名予約(Store ID `9PJ0X9T3PDGL` / PFN `Mirato.PCChecker_n9bj028cvzf5c`)・`packaging/AppxManifest.xml` への実値反映・MSIXビルド(`dist/msix/PCChecker.msix`)まで済んでいる。**2026-06-20に以下のビルド検証を完了。残りは手順6(Partner Centerへのアップロード・審査提出)のみ。**
+>
+> ### ビルド検証記録 (2026-06-20 / commit a064c47)
+>
+> | 項目 | 値 |
+> |---|---|
+> | バージョン | 1.0.1 (Manifest: `1.0.1.0`) |
+> | commit | `a064c47` |
+> | テスト | 273 passed |
+> | ファイル | `dist/msix/PCChecker.msix` |
+> | サイズ | 18,039,948 bytes |
+> | SHA-256 | `6C53E3BEAA81D1ADC147AFA49E99C305B5673941BDD60886982C836757321AD6` |
+> | パッケージ内容 | `.env`・秘密鍵なし 確認済み |
+> | 直接 exe スモーク | `dist/PCChecker.exe` 起動 → `http://127.0.0.1:8000/` が HTTP 200・PCChecker 画面を返した |
+>
+> **サイドロード確認の注意事項**: 自己署名証明書を **CurrentUser Root** ストアへ追加するのは避けること（システム全体の信頼チェーンを緩める可能性があるため）。CurrentUser TrustedPeople への追加では `0x800B0109` エラーが発生するが、これは想定内の動作。安全な次の検証ステップは Partner Center へアップロードし、Microsoft の再署名・審査フローで確認することを推奨する。
 
 ## 1. Partner Center に登録する
 

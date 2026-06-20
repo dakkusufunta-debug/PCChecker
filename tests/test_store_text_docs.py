@@ -48,6 +48,25 @@ def test_privacy_policy_html_is_standalone_and_consistent():
     assert "TODO" not in text
 
 
+def test_store_submission_doc_has_v1_0_1_build_record():
+    text = _read_docs("docs/store-submission.md")
+
+    # バージョンと commit
+    assert "1.0.1" in text
+    assert "1.0.1.0" in text
+    assert "a064c47" in text
+
+    # MSIX ハッシュ (大文字で記録)
+    assert "6C53E3BEAA81D1ADC147AFA49E99C305B5673941BDD60886982C836757321AD6" in text
+
+    # 自己署名 Root 追加を避ける旨の注意
+    assert "Root" in text
+    assert "0x800B0109" in text
+
+    # 次の確認手段として Partner Center が明記されていること
+    assert "Partner Center" in text
+
+
 def test_store_listing_has_submission_sections():
     text = _read_docs("docs/store-listing.md")
 
