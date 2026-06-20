@@ -39,6 +39,37 @@ def test_resolve_target_frozen(monkeypatch):
     assert info["target"] == str(Path(sys.executable))
 
 
+def test_icon_path_copies_to_persistent_dir_when_frozen(tmp_path, monkeypatch):
+    """凍結時はアイコンを永続フォルダ(data_dir)へコピーし、一時パスではなくその実体を指すこと。
+
+    一時展開フォルダ(_MEIPASS)を指すとアプリ終了後にアイコンが消えるための対策。
+    """
+    meipass = tmp_path / "_MEI_temp"
+    (meipass / "static").mkdir(parents=True)
+    src_ico = meipass / "static" / "icon.ico"
+    src_ico.write_bytes(b"ICO-DUMMY")
+    persistent = tmp_path / "appdata"
+    persistent.mkdir()
+
+    monkeypatch.setattr(ds, "is_frozen", lambda: True)
+    monkeypatch.setattr(ds, "resource_dir", lambda: meipass)
+    monkeypatch.setattr(ds, "data_dir", lambda: persistent)
+
+    icon = ds._icon_path()
+
+    # 一時フォルダ(_MEIPASS)ではなく永続フォルダの実体を指すこと
+    assert icon == str(persistent / "icon.ico")
+    assert "_MEI_temp" not in icon
+    assert (persistent / "icon.ico").read_bytes() == b"ICO-DUMMY"
+
+
+def test_icon_path_returns_empty_when_missing(tmp_path, monkeypatch):
+    """アイコンが同梱されていなければ空文字を返すこと"""
+    monkeypatch.setattr(ds, "is_frozen", lambda: True)
+    monkeypatch.setattr(ds, "resource_dir", lambda: tmp_path)
+    assert ds._icon_path() == ""
+
+
 def test_create_dev_mode(monkeypatch):
     """起動先が解決できない開発実行ではdev_modeを返す"""
     monkeypatch.setattr(sys, "platform", "win32")

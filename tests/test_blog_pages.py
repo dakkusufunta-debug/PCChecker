@@ -87,7 +87,7 @@ def test_blog_pages_have_required_cta_disclosure_and_related_links():
         assert "公開準備中" not in text
         assert "アフィリエイト開示" in text
         assert "成果報酬型のアフィリエイトリンク" in text
-        assert "診断情報は既定で外部送信されません" in text
+        assert "氏名やPC名などの個人情報を外部へ送信することはありません" in text
         assert "提供元 Mirato" in text
         # 楽天アフィリエイトの正規リンク(短縮URL)を掲載済み。TODOプレースホルダは残さない
         assert "https://a.r10.to/" in text

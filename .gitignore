@@ -8,8 +8,12 @@ venv/
 # 環境変数(APIキー等)
 .env
 
-# 楽天API価格キャッシュ
+# 楽天API価格キャッシュ(ローカル生成分・リモートキャッシュ分)
 price_cache.json
+remote_cache.json
+
+# ルート直下のアイコンは static/icon.ico と同一ファイルのため管理対象外
+/icon.ico
 
 # ビルド成果物
 build/

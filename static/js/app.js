@@ -1,7 +1,3 @@
-const ICONS = {
-  CPU: "⚡", RAM: "🧠", GPU: "🎮", "ストレージ": "💾",
-  "ディスプレイ": "🖥️", "ネットワーク": "🌐", "マザーボード": "📋",
-};
 const STATUS_LABEL = { below: "基準以下", meets: "この基準OK", exceeds: "基準超え" };
 
 let currentData = null;
@@ -247,9 +243,9 @@ function _applyProfileDom(key) {
 }
 
 const VERDICT_INFO = {
-  upgrade:  { label: "✅ 部分アップグレードで延命がおすすめ", cls: "verdict-upgrade" },
-  consider: { label: "⚖️ 買い替えとの比較を推奨",           cls: "verdict-consider" },
-  replace:  { label: "🔄 買い替えがおすすめ",               cls: "verdict-replace" },
+  upgrade:  { label: "部分アップグレードで延命がおすすめ", cls: "verdict-upgrade" },
+  consider: { label: "買い替えとの比較を推奨",           cls: "verdict-consider" },
+  replace:  { label: "買い替えがおすすめ",               cls: "verdict-replace" },
 };
 
 // BTO検索キーワード → 結果のクライアント側キャッシュ
@@ -426,7 +422,6 @@ function renderComponents(scores) {
 }
 
 function buildComponentCard(s) {
-  const icon        = ICONS[s.name] || "🔧";
   const statusLabel = STATUS_LABEL[s.status] || s.status;
 
   const recs = s.recommendations.length > 0
@@ -437,7 +432,7 @@ function buildComponentCard(s) {
 
   const upgrades = s.upgrade_options.length > 0
     ? `<div class="upgrade-section">
-        <div class="upgrade-title">🛒 おすすめパーツ</div>
+        <div class="upgrade-title">おすすめパーツ</div>
         <div class="upgrade-list">
           ${s.upgrade_options.map(u => `
             <div class="upgrade-item" data-part="${encodeURIComponent(u.name)}" data-ref="${parseRefPrice(u.price)}">
@@ -455,10 +450,7 @@ function buildComponentCard(s) {
   return `
     <div class="component-card status-${s.status}">
       <div class="comp-header">
-        <div class="comp-name">
-          <span class="comp-icon">${icon}</span>
-          ${s.name}
-        </div>
+        <div class="comp-name">${s.name}</div>
         <span class="status-badge ${s.status}">${statusLabel}</span>
       </div>
 
@@ -517,7 +509,7 @@ function drawShareCard() {
   // ヘッダー
   ctx.fillStyle = "#6c63ff";
   ctx.font = "bold 44px 'Segoe UI', 'Yu Gothic UI', sans-serif";
-  ctx.fillText("🖥️ PCChecker", 80, 120);
+  ctx.fillText("PCChecker", 80, 120);
   ctx.fillStyle = "#8b90a7";
   ctx.font = "24px 'Segoe UI', 'Yu Gothic UI', sans-serif";
   ctx.fillText("PC診断・アップグレード提案", 80, 158);
@@ -579,7 +571,7 @@ function shareOnX() {
   if (!currentData) return;
   const overall = currentData.profiles[currentProfile].overall;
   const text = `私のPCスコアは ${overall.score}点(${overall.grade}ランク)でした!\n` +
-               `あなたのPCもPCCheckerで診断してみよう💻\n#PCChecker`;
+               `あなたのPCもPCCheckerで診断してみよう\n#PCChecker`;
   const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SHARE_URL)}`;
   window.open(url, "_blank", "noopener");
 }

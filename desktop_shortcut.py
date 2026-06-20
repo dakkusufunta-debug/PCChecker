@@ -17,7 +17,7 @@ import os
 import sys
 from pathlib import Path
 
-from app_paths import is_frozen, resource_dir
+from app_paths import data_dir, is_frozen, resource_dir
 
 # AppxManifest.xml の Identity / Application より(Store登録値, 2026-06-16確定)
 PACKAGE_FAMILY_NAME = "Mirato.PCChecker_n9bj028cvzf5c"
@@ -52,9 +52,26 @@ def is_packaged() -> bool:
 
 
 def _icon_path() -> str:
-    """ショートカットに設定するアイコン(.ico)のパス。無ければ空文字。"""
-    ico = resource_dir() / "static" / "icon.ico"
-    return str(ico) if ico.exists() else ""
+    """ショートカットに設定するアイコン(.ico)のパス。無ければ空文字。
+
+    凍結時の resource_dir() は PyInstaller の一時展開フォルダ(_MEIPASS)で、
+    アプリ終了時に削除される。ショートカットのアイコンがそこを指すと終了後に
+    アイコンが消えてしまうため、永続フォルダ(data_dir)へコピーした実体を指す。
+    """
+    src = resource_dir() / "static" / "icon.ico"
+    if not src.exists():
+        return ""
+    if is_frozen():
+        try:
+            import shutil
+
+            dst = data_dir() / "icon.ico"
+            shutil.copyfile(src, dst)
+            return str(dst)
+        except Exception:
+            # コピーに失敗しても一時パスを返す(アイコンが出ないよりはまし)
+            return str(src)
+    return str(src)
 
 
 def resolve_target() -> dict | None:

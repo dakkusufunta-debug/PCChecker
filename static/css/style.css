@@ -67,7 +67,11 @@ body {
 
 /* ===== START ===== */
 .start-card { text-align: center; padding: 56px 28px; }
-.start-icon { font-size: 3.5rem; margin-bottom: 16px; }
+.start-icon { font-size: 3.5rem; margin-bottom: 16px; color: var(--accent); }
+/* 絵文字を廃しSVGアイコンに統一。サイズは各コンテナの font-size(1em)に追従させる */
+.header-btn svg,
+.start-icon svg,
+.error-icon svg { width: 1em; height: 1em; display: inline-block; vertical-align: middle; }
 .start-content h2 { font-size: 1.5rem; margin-bottom: 12px; }
 .start-content p { color: var(--text-muted); margin-bottom: 32px; line-height: 1.8; }
 
@@ -238,7 +242,6 @@ body {
 
 .comp-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .comp-name { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.comp-icon { font-size: 1.3rem; }
 
 .status-badge {
   font-size: 0.75rem; font-weight: 700;
@@ -281,7 +284,6 @@ body {
   color: var(--text-muted);
   display: flex; align-items: center; gap: 6px;
 }
-.comp-standard::before { content: "🎯"; font-size: 0.9rem; }
 
 .comp-notes {
   font-size: 0.88rem;
@@ -375,7 +377,6 @@ body {
   border-color: transparent;
   color: #fff;
 }
-.profile-tab-icon { font-size: 1.1rem; }
 .profile-desc { color: var(--text-muted); font-size: 0.88rem; margin: 0; }
 
 /* ===== UTILS ===== */
@@ -691,10 +692,12 @@ html[data-mode="simple"] #replacement-reasons {
 .settings-body { padding: 8px 22px 22px; }
 
 .setting-row {
+  /* 見出し(setting-info)を上、コントロールを下に全幅で並べる。
+     長い見出しでも見切れず、選択肢が多い行も収まりやすい */
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   padding: 16px 0;
   border-bottom: 1px solid var(--card-border);
 }
@@ -713,27 +716,30 @@ html[data-mode="simple"] #replacement-reasons {
 .shortcut-action {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 6px;
-  text-align: right;
 }
 
-/* セグメント切替コントロール */
+/* セグメント切替コントロール(見出し下に全幅・等幅で並べる) */
 .segmented {
-  display: inline-flex;
+  display: flex;
+  align-self: stretch;
+  flex-wrap: nowrap;
   background: var(--bg2);
   border: 1px solid var(--card-border);
   border-radius: 10px;
   padding: 3px;
-  flex-shrink: 0;
 }
+.segmented .seg-btn { flex: 1 1 0; min-width: 0; }
+/* 等幅で並べても文字がはみ出す場合はJSが .stacked を付与し1行1ボタンにする */
+.segmented.stacked { flex-direction: column; }
 .seg-btn {
   background: none;
   border: none;
   color: var(--text-muted);
   font: inherit;
   font-size: 0.85rem;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 7px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -744,13 +750,4 @@ html[data-mode="simple"] #replacement-reasons {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
-}
-
-@media (max-width: 560px) {
-  .setting-row { flex-direction: column; align-items: stretch; gap: 10px; }
-  /* 設定項目を縦積みにしたら、セグメントは全幅・等幅で1行に並べる。
-     収まらない場合はJSが .stacked を付け、1行1ボタンの均等幅にする */
-  .segmented { align-self: stretch; flex-wrap: nowrap; }
-  .seg-btn { flex: 1 1 0; min-width: 0; }
-  .segmented.stacked { flex-direction: column; }
 }

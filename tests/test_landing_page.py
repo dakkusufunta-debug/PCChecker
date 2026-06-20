@@ -65,7 +65,7 @@ def test_landing_page_contains_required_product_claims():
     required_phrases = [
         "あなたのPC、まだ使えますか？",
         "買い替え・アップグレード判定を無料で",
-        "PC構成情報は既定で外部送信されません",
+        "氏名やPC名などの個人情報を外部へ送信することはありません",
         "CPU",
         "GPU",
         "メモリ",

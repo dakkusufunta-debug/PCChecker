@@ -65,7 +65,8 @@ def test_store_listing_has_submission_sections():
         assert heading in text
 
     assert "無料" in text
-    assert "ローカル処理" in text
+    # ローカル処理(=お使いの PC 内で処理)を訴求していること
+    assert "お使いの PC 内で処理" in text
     assert "127.0.0.1" in text
     assert "フルトラスト権限" in text
     assert ".env" in text
