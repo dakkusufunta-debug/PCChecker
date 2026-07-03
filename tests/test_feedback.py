@@ -4,6 +4,8 @@
 診断データのサイズ上限)と、送信成功/通信失敗/サーバーエラーの扱いを検証する。
 実際のHTTP送信はモックする。
 """
+from pathlib import Path
+
 import pytest
 
 import feedback_client as fc
@@ -71,6 +73,11 @@ class TestPayload:
 
 
 class TestTransport:
+    def test_feedback_user_agent_is_ascii(self):
+        """HTTPヘッダーはASCIIにし、Pythonの送信前エラーを避ける。"""
+        source = Path(fc.__file__).read_text(encoding="utf-8")
+        assert '"User-Agent": "PCCustomSupport"' in source
+
     def test_network_error_reported(self, monkeypatch):
         def boom(url, payload):
             raise OSError("connection refused")

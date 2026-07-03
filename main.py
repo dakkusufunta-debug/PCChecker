@@ -1,5 +1,5 @@
 """
-PCChecker - PC診断・アップグレード提案アプリ - FastAPIバックエンド
+PCカスタムサポート - PC診断・アップグレード提案アプリ - FastAPIバックエンド
 """
 
 import socket
@@ -20,7 +20,7 @@ from rakuten_client import is_available, search_bto, search_part
 from feedback_client import submit_feedback
 from desktop_shortcut import create_desktop_shortcut
 
-app = FastAPI(title="PCChecker", version="1.0.0")
+app = FastAPI(title="PCカスタムサポート", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -106,7 +106,7 @@ def feedback(body: FeedbackIn):
 
 @app.post("/api/create-desktop-shortcut", response_class=JSONResponse)
 def create_desktop_shortcut_endpoint():
-    """デスクトップにPCCheckerのショートカットを作成する(任意操作)"""
+    """デスクトップにPCカスタムサポートのショートカットを作成する(任意操作)"""
     try:
         return create_desktop_shortcut()
     except Exception:
@@ -147,7 +147,7 @@ def wait_and_open_browser(url: str, timeout_sec: float = 15.0, interval_sec: flo
 def _setup_frozen_logging() -> None:
     """ウィンドウなしexeでは標準出力がないため、ログをファイルへ逃がす"""
     if is_frozen() and (sys.stdout is None or sys.stderr is None):
-        log_file = open(data_dir() / "pcchecker.log", "a", encoding="utf-8", buffering=1)
+        log_file = open(data_dir() / "pccustomsupport.log", "a", encoding="utf-8", buffering=1)
         sys.stdout = log_file
         sys.stderr = log_file
 
@@ -159,7 +159,7 @@ def main() -> None:
     port = pick_port()
     url = f"http://127.0.0.1:{port}"
     threading.Thread(target=wait_and_open_browser, args=(url,), daemon=True).start()
-    print("PCChecker を起動中...")
+    print("PCカスタムサポート を起動中...")
     print(f"ブラウザが自動で開きます → {url}")
     uvicorn.run(app, host="127.0.0.1", port=port)
 

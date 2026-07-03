@@ -10,7 +10,7 @@ import desktop_shortcut as ds
 
 def test_aumid_matches_manifest():
     """AUMIDがAppxManifestのPFN!AppIdと一致すること"""
-    assert ds.AUMID == "Mirato.PCChecker_n9bj028cvzf5c!PCChecker"
+    assert ds.AUMID == "Mirato.PCChecker_n9bj028cvzf5c!PCCustomSupport"
 
 
 def test_resolve_target_dev_returns_none(monkeypatch):

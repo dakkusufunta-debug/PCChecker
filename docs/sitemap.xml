@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://dakkusufunta-debug.github.io/PCChecker/</loc>
+    <loc>https://dakkusufunta-debug.github.io/PCCustomSupport/</loc>
     <lastmod>2026-06-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://dakkusufunta-debug.github.io/PCChecker/blog/</loc>
+    <loc>https://dakkusufunta-debug.github.io/PCCustomSupport/blog/</loc>
     <lastmod>2026-06-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dakkusufunta-debug.github.io/PCChecker/blog/pc-replace-timing.html</loc>
+    <loc>https://dakkusufunta-debug.github.io/PCCustomSupport/blog/pc-replace-timing.html</loc>
     <lastmod>2026-06-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dakkusufunta-debug.github.io/PCChecker/blog/check-pc-spec.html</loc>
+    <loc>https://dakkusufunta-debug.github.io/PCCustomSupport/blog/check-pc-spec.html</loc>
     <lastmod>2026-06-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dakkusufunta-debug.github.io/PCChecker/blog/memory-upgrade.html</loc>
+    <loc>https://dakkusufunta-debug.github.io/PCCustomSupport/blog/memory-upgrade.html</loc>
     <lastmod>2026-06-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dakkusufunta-debug.github.io/PCChecker/privacy-policy.html</loc>
+    <loc>https://dakkusufunta-debug.github.io/PCCustomSupport/privacy-policy.html</loc>
     <lastmod>2026-06-18</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

@@ -45,10 +45,10 @@ _last_call_at = 0.0
 # 配布されたexeはユーザーPCから楽天API(IP許可制)を直接叩けず、秘密鍵も
 # 同梱できない。そこで固定IPの中継サーバーが日次生成した価格キャッシュを
 # CDN(Cloudflare)経由で配信し、exeはそれを参照する。
-# URLは環境変数 PCCHECKER_CACHE_URL で上書き可能(検証・移行用)。
+# URLは環境変数 PCCUSTOMSUPPORT_CACHE_URL で上書き可能(検証・移行用)。
 REMOTE_CACHE_URL = os.environ.get(
-    "PCCHECKER_CACHE_URL",
-    "https://pcchecker-cache.pages.dev/price_cache.json",
+    "PCCUSTOMSUPPORT_CACHE_URL",
+    "https://pccustomsupport-cache.pages.dev/price_cache.json",
 )
 REMOTE_CACHE_PATH = data_dir() / "remote_cache.json"
 REMOTE_REFETCH_SEC = 12 * 60 * 60  # ローカルに落としたリモートキャッシュの再取得間隔
@@ -94,7 +94,7 @@ def is_available() -> bool:
 
 def _http_get_json(url: str) -> dict:
     """URLからJSONを取得して返す(失敗時は例外送出)。テストで差し替え可能。"""
-    req = urllib.request.Request(url, headers={"User-Agent": "PCChecker"})
+    req = urllib.request.Request(url, headers={"User-Agent": "PCCustomSupport"})
     with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SEC) as res:
         return json.loads(res.read().decode("utf-8"))
 

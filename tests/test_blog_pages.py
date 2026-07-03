@@ -64,7 +64,7 @@ def test_blog_pages_exist_and_have_required_seo():
         assert 'property="og:title"' in text
         assert 'property="og:description"' in text
         assert 'property="og:type" content="article"' in text
-        assert 'property="og:image" content="https://dakkusufunta-debug.github.io/PCChecker/img/screen1.png"' in text
+        assert 'property="og:image" content="https://dakkusufunta-debug.github.io/PCCustomSupport/img/screen1.png"' in text
         assert 'rel="stylesheet" href="../lp.css"' in text
         assert 'rel="stylesheet" href="blog.css"' in text
         assert parser.h1_count == 1

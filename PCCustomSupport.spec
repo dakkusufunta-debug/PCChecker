@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
-# PCChecker のPyInstallerビルド定義
-#   ビルド: python -m PyInstaller PCChecker.spec --noconfirm
-#   出力:   dist/PCChecker.exe (単一ファイル・ウィンドウなし)
+# PCカスタムサポート のPyInstallerビルド定義
+#   ビルド: python -m PyInstaller PCCustomSupport.spec --noconfirm
+#   出力:   dist/PCCustomSupport.exe (単一ファイル・ウィンドウなし)
 
 from PyInstaller.utils.hooks import collect_submodules
 
@@ -40,11 +40,11 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="PCChecker",
+    name="PCCustomSupport",
     debug=False,
     strip=False,
     upx=False,
-    console=False,  # ウィンドウなし(ログは %LOCALAPPDATA%\PCChecker\pcchecker.log)
+    console=False,  # ウィンドウなし(ログは %LOCALAPPDATA%\PCカスタムサポート\pccustomsupport.log)
     disable_windowed_traceback=False,
     icon="static/icon.ico",
 )

@@ -1,4 +1,4 @@
-# PCChecker
+# PCカスタムサポート
 
 お使いのWindows PCのスペックを自動診断し、用途に合わせたアップグレードパーツを提案するデスクトップアプリです。
 
@@ -42,13 +42,13 @@ python -m pytest tests -q
 ```powershell
 pip install -r requirements-dev.txt
 python scripts/make_icon.py              # static/icon.ico を生成
-python -m PyInstaller PCChecker.spec --noconfirm
+python -m PyInstaller PCCustomSupport.spec --noconfirm
 ```
 
-出力: `dist/PCChecker.exe`
+出力: `dist/PCCustomSupport.exe`
 
-- ビルド定義は `PCChecker.spec`、アイコンは `static/icon.ico`。
-- exe 実行時のログは `%LOCALAPPDATA%\PCChecker\pcchecker.log`。
+- ビルド定義は `PCCustomSupport.spec`、アイコンは `static/icon.ico`。
+- exe 実行時のログは `%LOCALAPPDATA%\PCカスタムサポート\pccustomsupport.log`。
 - 楽天価格連携を使う場合は `.env`(`.env.example` 参照)を exe と同じフォルダに置きます。秘密鍵を含むため配布物には同梱しないでください。
 
 ## 免責事項

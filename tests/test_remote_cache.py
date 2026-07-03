@@ -5,6 +5,7 @@
 実ネットワーク・実APIキーには一切依存しない(取得処理をモックする)。
 """
 import json
+from pathlib import Path
 
 import pytest
 
@@ -98,6 +99,11 @@ class TestNetworkFailureFallback:
 
 
 class TestRemoteCacheFetchBehavior:
+    def test_remote_cache_user_agent_is_ascii(self):
+        """HTTPヘッダーはASCIIにし、Pythonの送信前エラーを避ける。"""
+        source = Path(rc.__file__).read_text(encoding="utf-8")
+        assert '"User-Agent": "PCCustomSupport"' in source
+
     def test_fetched_once_within_refetch_window(self, monkeypatch):
         calls = {"n": 0}
 

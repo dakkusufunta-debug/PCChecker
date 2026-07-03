@@ -9,12 +9,12 @@
   <Identity
     Name="Mirato.PCChecker"
     Publisher="CN=3F06A858-7418-4AB5-A1BD-FD856E9B75B0"
-    Version="1.0.1.0"
+    Version="1.0.2.0"
     ProcessorArchitecture="x64" />
-  <!-- Partner Center「製品識別の確認」より反映(2026-06-16)。Store ID: 9PJ0X9T3PDGL / PFN: Mirato.PCChecker_n9bj028cvzf5c -->
+  <!-- 既存Store製品の固定ID。表示名・実行ファイル名は新名称へ変更済み。 -->
 
   <Properties>
-    <DisplayName>PCChecker</DisplayName>
+    <DisplayName>PCカスタムサポート</DisplayName>
     <PublisherDisplayName>Mirato</PublisherDisplayName>
     <!-- 屋号「Mirato」。Partner Centerの発行元表示名と完全一致させること(2026-06-16確定) -->
     <Logo>images\StoreLogo.png</Logo>
@@ -33,11 +33,11 @@
 
   <Applications>
     <Application
-      Id="PCChecker"
-      Executable="PCChecker.exe"
+      Id="PCCustomSupport"
+      Executable="PCCustomSupport.exe"
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="PCChecker"
+        DisplayName="PCカスタムサポート"
         Description="Windows PCのスペックをローカルで診断し、用途に合わせたアップグレード候補を提示します。"
         BackgroundColor="#101820"
         Square44x44Logo="images\Square44x44Logo.png"

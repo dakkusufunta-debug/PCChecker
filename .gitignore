@@ -18,9 +18,10 @@ remote_cache.json
 # ビルド成果物
 build/
 dist/
+.wrangler/
 *.spec
 # ビルド定義はバージョン管理する
-!PCChecker.spec
+!PCCustomSupport.spec
 
 # OS
 Thumbs.db

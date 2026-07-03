@@ -1,5 +1,5 @@
 """
-PCChecker - デスクトップショートカット作成
+PCカスタムサポート - デスクトップショートカット作成
 
 Storeアプリ(MSIX)はインストール時にデスクトップアイコンを作成できないため、
 アプリ内から任意でデスクトップに .lnk を作成する手段を提供する。
@@ -19,13 +19,13 @@ from pathlib import Path
 
 from app_paths import data_dir, is_frozen, resource_dir
 
-# AppxManifest.xml の Identity / Application より(Store登録値, 2026-06-16確定)
+# AppxManifest.xml の Identity / Application より
 PACKAGE_FAMILY_NAME = "Mirato.PCChecker_n9bj028cvzf5c"
-APP_ID = "PCChecker"
+APP_ID = "PCCustomSupport"
 AUMID = f"{PACKAGE_FAMILY_NAME}!{APP_ID}"
 
-SHORTCUT_NAME = "PCChecker.lnk"
-SHORTCUT_DESCRIPTION = "PCChecker - PCスペック診断"
+SHORTCUT_NAME = "PCカスタムサポート.lnk"
+SHORTCUT_DESCRIPTION = "PCカスタムサポート - PCスペック診断"
 
 # GetCurrentPackageFullName が返す「パッケージ外」エラーコード
 _APPMODEL_ERROR_NO_PACKAGE = 15700
@@ -107,7 +107,7 @@ def resolve_target() -> dict | None:
 def create_desktop_shortcut(
     desktop_dir: str | None = None, target: dict | None = None
 ) -> dict:
-    """デスクトップに PCChecker のショートカットを作成する。
+    """デスクトップに PCカスタムサポート のショートカットを作成する。
 
     desktop_dir / target はテスト用の注入口。未指定なら実環境から解決する。
     戻り値: {"ok": True, "path": <lnk>} もしくは {"ok": False, "reason": ...}

@@ -34,7 +34,7 @@ class TestFrozenRun:
     def _freeze(self, monkeypatch, tmp_path):
         monkeypatch.setattr(sys, "frozen", True, raising=False)
         monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path / "meipass"), raising=False)
-        monkeypatch.setattr(sys, "executable", str(tmp_path / "dist" / "PCChecker.exe"))
+        monkeypatch.setattr(sys, "executable", str(tmp_path / "dist" / "PCCustomSupport.exe"))
         monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "appdata"))
 
     def test_resource_dir_is_meipass(self, monkeypatch, tmp_path):
@@ -44,7 +44,7 @@ class TestFrozenRun:
     def test_data_dir_is_localappdata_and_created(self, monkeypatch, tmp_path):
         self._freeze(monkeypatch, tmp_path)
         result = data_dir()
-        assert result == tmp_path / "appdata" / "PCChecker"
+        assert result == tmp_path / "appdata" / "PCカスタムサポート"
         assert result.is_dir()  # 自動作成される
 
     def test_env_path_prefers_exe_side(self, monkeypatch, tmp_path):
@@ -56,7 +56,7 @@ class TestFrozenRun:
 
     def test_env_path_falls_back_to_data_dir(self, monkeypatch, tmp_path):
         self._freeze(monkeypatch, tmp_path)
-        assert env_path() == tmp_path / "appdata" / "PCChecker" / ".env"
+        assert env_path() == tmp_path / "appdata" / "PCカスタムサポート" / ".env"
 
 
 class TestIcon:
@@ -68,7 +68,7 @@ class TestIcon:
         assert icon.stat().st_size > 0
 
     def test_spec_references_icon(self):
-        spec = (PROJECT_DIR / "PCChecker.spec").read_text(encoding="utf-8")
+        spec = (PROJECT_DIR / "PCCustomSupport.spec").read_text(encoding="utf-8")
         assert "icon=" in spec
         assert "static/icon.ico" in spec
 

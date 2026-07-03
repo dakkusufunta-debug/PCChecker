@@ -1,24 +1,24 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [switch]$SkipPyInstaller,
     [switch]$Sign,
     [switch]$InstallCertificate,
     [string]$CertificateSubject = "",
-    [string]$CertificatePassword = "PCCheckerLocalTest",
+    [string]$CertificatePassword = "PCCustomSupportLocalTest",
     [string]$Configuration = "Release"
 )
 
 $ErrorActionPreference = "Stop"
 
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
-$DistExe = Join-Path $RepoRoot "dist\PCChecker.exe"
+$DistExe = Join-Path $RepoRoot "dist\PCCustomSupport.exe"
 $LayoutDir = Join-Path $RepoRoot "build\msix-layout"
 $OutputDir = Join-Path $RepoRoot "dist\msix"
 $ManifestPath = Join-Path $PSScriptRoot "AppxManifest.xml"
 $ImagesDir = Join-Path $PSScriptRoot "images"
-$MsixPath = Join-Path $OutputDir "PCChecker.msix"
+$MsixPath = Join-Path $OutputDir "PCCustomSupport.msix"
 $CertDir = Join-Path $RepoRoot "build\cert"
-$PfxPath = Join-Path $CertDir "PCChecker.LocalTest.pfx"
+$PfxPath = Join-Path $CertDir "PCCustomSupport.LocalTest.pfx"
 
 function Find-WindowsSdkTool {
     param([Parameter(Mandatory = $true)][string]$Name)
@@ -71,7 +71,7 @@ function New-LocalSigningCertificate {
         -Type CodeSigningCert `
         -Subject $Subject `
         -KeyUsage DigitalSignature `
-        -FriendlyName "PCChecker Local MSIX Test Certificate" `
+        -FriendlyName "PCカスタムサポート Local MSIX Test Certificate" `
         -CertStoreLocation "Cert:\CurrentUser\My"
 
     Export-PfxCertificate -Cert $cert -FilePath $PfxFile -Password $securePassword | Out-Null
@@ -97,7 +97,7 @@ function Invoke-PyInstallerBuild {
 
     Push-Location $RepoRoot
     try {
-        & $Python -m PyInstaller PCChecker.spec --noconfirm
+        & $Python -m PyInstaller PCCustomSupport.spec --noconfirm
     }
     finally {
         Pop-Location
@@ -119,7 +119,7 @@ function Copy-CleanDirectory {
 
 function New-PackageLayout {
     if (-not (Test-Path $DistExe)) {
-        throw "dist\PCChecker.exe が見つかりません。-SkipPyInstaller を外してビルドするか、先に PyInstaller を実行してください。"
+        throw "dist\PCCustomSupport.exe が見つかりません。-SkipPyInstaller を外してビルドするか、先に PyInstaller を実行してください。"
     }
 
     if (Test-Path $LayoutDir) {
@@ -127,7 +127,7 @@ function New-PackageLayout {
     }
     New-Item -ItemType Directory -Force $LayoutDir | Out-Null
 
-    Copy-Item -LiteralPath $DistExe -Destination (Join-Path $LayoutDir "PCChecker.exe") -Force
+    Copy-Item -LiteralPath $DistExe -Destination (Join-Path $LayoutDir "PCCustomSupport.exe") -Force
     Copy-Item -LiteralPath $ManifestPath -Destination (Join-Path $LayoutDir "AppxManifest.xml") -Force
     Copy-CleanDirectory -Source (Join-Path $RepoRoot "templates") -Destination (Join-Path $LayoutDir "templates")
     Copy-CleanDirectory -Source (Join-Path $RepoRoot "static") -Destination (Join-Path $LayoutDir "static")

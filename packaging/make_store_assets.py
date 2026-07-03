@@ -1,4 +1,4 @@
-"""PCChecker の Microsoft Store / MSIX 用 PNG アセットを生成する。"""
+"""PCカスタムサポート の Microsoft Store / MSIX 用 PNG アセットを生成する。"""
 
 from __future__ import annotations
 

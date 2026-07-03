@@ -1,5 +1,5 @@
 /**
- * PCChecker フィードバック受信用 Cloudflare Worker
+ * PCカスタムサポート フィードバック受信用 Cloudflare Worker
  *
  * アプリ内フィードバック(POST /api/feedback)の転送先。
  * 受け取ったフィードバックを ①Cloudflare KV に保存し、②(設定時)Discord
@@ -10,10 +10,10 @@
  *   2. wrangler.toml に binding と(任意で)DISCORD_WEBHOOK_URL を設定
  *   3. wrangler deploy
  *   4. 発行された https://<name>.<account>.workers.dev を
- *      feedback_client.py の FEEDBACK_URL(または環境変数 PCCHECKER_FEEDBACK_URL)に設定
+ *      feedback_client.py の FEEDBACK_URL(または環境変数 PCCUSTOMSUPPORT_FEEDBACK_URL)に設定
  *
  * wrangler.toml 例:
- *   name = "pcchecker-feedback"
+ *   name = "pccustomsupport-feedback"
  *   main = "feedback-worker.js"
  *   compatibility_date = "2026-01-01"
  *   kv_namespaces = [{ binding = "FEEDBACK_KV", id = "<KV_ID>" }]

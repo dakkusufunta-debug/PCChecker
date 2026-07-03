@@ -5,7 +5,7 @@
 フィードバックを外部のCloudflare Workerへ転送する。
 
 設計上の注意:
-- 送信先(sink)は環境変数 PCCHECKER_FEEDBACK_URL で上書き可能(検証・移行用)。
+- 送信先(sink)は環境変数 PCCUSTOMSUPPORT_FEEDBACK_URL で上書き可能(検証・移行用)。
 - 診断データ(スペック・スコア)の添付はユーザーのオプトイン。添付対象は
   ハードウェア構成と診断スコアのみで、氏名・PC名などの個人情報は含まない
   (添付内容は app.js 側で要約を組み立て、UIに明示する)。
@@ -22,10 +22,10 @@ import os
 from app_paths import APP_VERSION
 
 # 送信先 Cloudflare Worker。デプロイ後に本番URLへ差し替える
-# (検証時は環境変数 PCCHECKER_FEEDBACK_URL で上書き可能)。
+# (検証時は環境変数 PCCUSTOMSUPPORT_FEEDBACK_URL で上書き可能)。
 FEEDBACK_URL = os.environ.get(
-    "PCCHECKER_FEEDBACK_URL",
-    "https://pcchecker-feedback.example.workers.dev",
+    "PCCUSTOMSUPPORT_FEEDBACK_URL",
+    "https://pccustomsupport-feedback.example.workers.dev",
 )
 
 REQUEST_TIMEOUT_SEC = 15
@@ -46,7 +46,7 @@ def _http_post_json(url: str, payload: dict) -> int:
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         url, data=body, method="POST",
-        headers={"Content-Type": "application/json", "User-Agent": "PCChecker"},
+        headers={"Content-Type": "application/json", "User-Agent": "PCCustomSupport"},
     )
     with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SEC) as res:
         return res.status

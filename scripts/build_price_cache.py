@@ -53,9 +53,9 @@ JST = timezone(timedelta(hours=9))
 CACHE_TTL_HOURS = 24
 REQUEST_TIMEOUT_SEC = 15
 
-ALERT_WEBHOOK_ENV = "PCCHECKER_ALERT_WEBHOOK"
-PRICE_MIN_HIT_RATIO_ENV = "PCCHECKER_PRICE_MIN_HIT_RATIO"
-BTO_MIN_HITS_ENV = "PCCHECKER_BTO_MIN_HITS"
+ALERT_WEBHOOK_ENV = "PCCUSTOMSUPPORT_ALERT_WEBHOOK"
+PRICE_MIN_HIT_RATIO_ENV = "PCCUSTOMSUPPORT_PRICE_MIN_HIT_RATIO"
+BTO_MIN_HITS_ENV = "PCCUSTOMSUPPORT_BTO_MIN_HITS"
 DEFAULT_PRICE_MIN_HIT_RATIO = 0.5
 DEFAULT_BTO_MIN_HITS = 1
 
@@ -199,7 +199,7 @@ def build_alert_message(health: dict) -> str:
     """Discord互換Webhookへ送る本文を組み立てる"""
     reasons = " / ".join(health.get("reasons") or ["理由不明"])
     return (
-        "[PCChecker] 価格キャッシュ更新の異常を検知しました\n"
+        "[PCカスタムサポート] 価格キャッシュ更新の異常を検知しました\n"
         f"理由: {reasons}\n"
         f"価格ヒット: {health.get('price_hits', 0)}/{health.get('price_total', 0)}\n"
         f"BTOヒット: {health.get('bto_hits', 0)}/{health.get('bto_total', 0)}\n"
@@ -213,7 +213,7 @@ def _http_post_json(url: str, payload: dict) -> int:
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         url, data=body, method="POST",
-        headers={"Content-Type": "application/json", "User-Agent": "PCChecker"},
+        headers={"Content-Type": "application/json", "User-Agent": "PCカスタムサポート"},
     )
     with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SEC) as res:
         return res.status

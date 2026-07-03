@@ -7,7 +7,7 @@ let currentProfile = "mid";
 // 設定（表示モード・テーマ・文字サイズ等）
 // ---------------------------------------------------------------------------
 
-const SETTINGS_KEY = "pcchecker_settings";
+const SETTINGS_KEY = "pccustomsupport_settings";
 const DEFAULT_SETTINGS = {
   mode: "simple",            // "simple"(初心者向け) | "detailed"(詳しく)
   theme: "dark",             // "dark" | "light"
@@ -483,7 +483,7 @@ function buildComponentCard(s) {
 // ---------------------------------------------------------------------------
 
 const GRADE_COLORS = { A: "#00d4aa", B: "#6c63ff", C: "#ffd460", D: "#ff5f6d" };
-const SHARE_URL = "https://dakkusufunta-debug.github.io/PCChecker/";
+const SHARE_URL = "https://dakkusufunta-debug.github.io/PCCustomSupport/";
 
 function drawShareCard() {
   const p = currentData.profiles[currentProfile];
@@ -509,7 +509,7 @@ function drawShareCard() {
   // ヘッダー
   ctx.fillStyle = "#6c63ff";
   ctx.font = "bold 44px 'Segoe UI', 'Yu Gothic UI', sans-serif";
-  ctx.fillText("PCChecker", 80, 120);
+  ctx.fillText("PCカスタムサポート", 80, 120);
   ctx.fillStyle = "#8b90a7";
   ctx.font = "24px 'Segoe UI', 'Yu Gothic UI', sans-serif";
   ctx.fillText("PC診断・アップグレード提案", 80, 158);
@@ -562,7 +562,7 @@ function downloadShareCard() {
   if (!currentData) return;
   const canvas = drawShareCard();
   const link = document.createElement("a");
-  link.download = `pcchecker_score_${currentProfile}.png`;
+  link.download = `pccustomsupport_score_${currentProfile}.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
@@ -571,7 +571,7 @@ function shareOnX() {
   if (!currentData) return;
   const overall = currentData.profiles[currentProfile].overall;
   const text = `私のPCスコアは ${overall.score}点(${overall.grade}ランク)でした!\n` +
-               `あなたのPCもPCCheckerで診断してみよう\n#PCChecker`;
+               `あなたのPCもPCカスタムサポートで診断してみよう\n#PCカスタムサポート`;
   const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SHARE_URL)}`;
   window.open(url, "_blank", "noopener");
 }

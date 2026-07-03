@@ -21,8 +21,8 @@ exe側は鍵不要・IP制限の影響なしでそのJSONを参照する。
 ```bash
 # VPS上(Ubuntu等)
 sudo apt update && sudo apt install -y python3 python3-pip git
-git clone https://github.com/dakkusufunta-debug/PCChecker.git
-cd PCChecker
+git clone https://github.com/dakkusufunta-debug/PCCustomSupport.git
+cd PCCustomSupport
 pip3 install -r requirements.txt   # 収集に必要なのは標準ライブラリのみだが念のため
 
 # 楽天APIキーを配置（このサーバーにのみ置く）
@@ -37,7 +37,7 @@ nano .env   # RAKUTEN_APPLICATION_ID / RAKUTEN_ACCESS_KEY / RAKUTEN_AFFILIATE_ID
 ### バッチ実行
 
 ```bash
-python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json
+python3 scripts/build_price_cache.py /var/www/pccustomsupport-cache/price_cache.json
 ```
 
 - `pc_analyzer` がトップレベルで import する Windows 専用モジュール（`wmi`/`winreg`）は、
@@ -49,7 +49,7 @@ python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json
 
 ```cron
 # crontab -e
-0 5 * * * cd /home/USER/PCChecker && /usr/bin/python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json >> /var/log/pcchecker-cache.log 2>&1
+0 5 * * * cd /home/USER/PCCustomSupport && /usr/bin/python3 scripts/build_price_cache.py /var/www/pccustomsupport-cache/price_cache.json >> /var/log/pccustomsupport-cache.log 2>&1
 ```
 
 ---
@@ -65,12 +65,12 @@ python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json
 - 価格ヒット数が総数の50%未満
 - BTOヒットが0件
 
-異常時に通知を受けるには、実行環境に `PCCHECKER_ALERT_WEBHOOK` を設定する。
+異常時に通知を受けるには、実行環境に `PCCUSTOMSUPPORT_ALERT_WEBHOOK` を設定する。
 
 ```powershell
 # Windows タスクスケジューラで使うユーザー環境変数として設定する例
 [Environment]::SetEnvironmentVariable(
-  "PCCHECKER_ALERT_WEBHOOK",
+  "PCCUSTOMSUPPORT_ALERT_WEBHOOK",
   "https://discord.com/api/webhooks/....",
   "User"
 )
@@ -78,19 +78,19 @@ python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json
 
 ```bash
 # Linux / cron で使う例
-export PCCHECKER_ALERT_WEBHOOK="https://discord.com/api/webhooks/...."
-python3 scripts/build_price_cache.py /var/www/pcchecker-cache/price_cache.json
+export PCCUSTOMSUPPORT_ALERT_WEBHOOK="https://discord.com/api/webhooks/...."
+python3 scripts/build_price_cache.py /var/www/pccustomsupport-cache/price_cache.json
 ```
 
 Discord Webhook が最も手軽。Discord の「サーバー設定」→「連携サービス」→
-「ウェブフック」で作成し、発行された Webhook URL を `PCCHECKER_ALERT_WEBHOOK` に設定する。
+「ウェブフック」で作成し、発行された Webhook URL を `PCCUSTOMSUPPORT_ALERT_WEBHOOK` に設定する。
 送信形式は `{"content": "..."}` の単純なJSONなので、Discord互換の受信先や汎用Webhookにも
 流用できる。
 
 通知例:
 
 ```text
-[PCChecker] 価格キャッシュ更新の異常を検知しました
+[PCカスタムサポート] 価格キャッシュ更新の異常を検知しました
 理由: 価格ヒット数がしきい値未満: 0/60 (50% 未満) / BTOヒット数がしきい値未満: 0件 (最低 1件)
 価格ヒット: 0/60
 BTOヒット: 0/6
@@ -105,11 +105,11 @@ IP許可リストを更新する。APIキーの期限切れでも同様にヒッ
 しきい値は必要に応じて環境変数で調整できる。
 
 ```bash
-PCCHECKER_PRICE_MIN_HIT_RATIO=0.5  # 価格ヒット率の下限
-PCCHECKER_BTO_MIN_HITS=1           # BTOヒット数の下限
+PCCUSTOMSUPPORT_PRICE_MIN_HIT_RATIO=0.5  # 価格ヒット率の下限
+PCCUSTOMSUPPORT_BTO_MIN_HITS=1           # BTOヒット数の下限
 ```
 
-`PCCHECKER_ALERT_WEBHOOK` が未設定の場合、通知は送らず標準エラーに警告だけを出す。
+`PCCUSTOMSUPPORT_ALERT_WEBHOOK` が未設定の場合、通知は送らず標準エラーに警告だけを出す。
 通知先の一時障害でもバッチ本体は通知失敗では落とさないが、生成結果が異常なら
 タスクスケジューラやcronで検知できるよう終了コードは非0になる。
 
@@ -120,12 +120,12 @@ PCCHECKER_BTO_MIN_HITS=1           # BTOヒット数の下限
 固定IPは**不要**（楽天を叩くのは収集層だけ）。静的JSONを配るだけなので高速・安価・DDoS耐性が高い。
 
 ### 方式A: Cloudflare Pages（手軽）
-1. `pcchecker-cache` などの Pages プロジェクトを作成。
+1. `pccustomsupport-cache` などの Pages プロジェクトを作成。
 2. 収集層で生成した `price_cache.json` を含むディレクトリを `wrangler pages deploy` で公開。
    ```bash
-   npx wrangler pages deploy /var/www/pcchecker-cache --project-name=pcchecker-cache
+   npx wrangler pages deploy /var/www/pccustomsupport-cache --project-name=pccustomsupport-cache
    ```
-3. 公開URL（例 `https://pcchecker-cache.pages.dev/price_cache.json`）を控える。
+3. 公開URL（例 `https://pccustomsupport-cache.pages.dev/price_cache.json`）を控える。
    cron の最後に wrangler deploy を足せば、生成→公開まで日次自動化できる。
 
 ### 方式B: Cloudflare R2（オブジェクトストレージ）
@@ -139,20 +139,20 @@ PCCHECKER_BTO_MIN_HITS=1           # BTOヒット数の下限
 ## 3. クライアント（exe）側の設定
 
 `rakuten_client.py` の `REMOTE_CACHE_URL` を、上で控えた公開URLに差し替える。
-（検証時は環境変数 `PCCHECKER_CACHE_URL` で上書き可能。）
+（検証時は環境変数 `PCCUSTOMSUPPORT_CACHE_URL` で上書き可能。）
 
 ```python
 # rakuten_client.py
 REMOTE_CACHE_URL = os.environ.get(
-    "PCCHECKER_CACHE_URL",
-    "https://pcchecker-cache.pages.dev/price_cache.json",  # ← 本番URLに差し替え
+    "PCCUSTOMSUPPORT_CACHE_URL",
+    "https://pccustomsupport-cache.pages.dev/price_cache.json",  # ← 本番URLに差し替え
 )
 ```
 
 ### 配布版の挙動
 - ローカルに `.env` が無い → `is_configured()` が False → `search_part`/`search_bto` は
   リモートキャッシュ（CDN）を参照。
-- exe は取得したJSONを `%LOCALAPPDATA%\PCChecker\remote_cache.json` に12時間キャッシュ。
+- exe は取得したJSONを `%LOCALAPPDATA%\PCカスタムサポート\remote_cache.json` に12時間キャッシュ。
 - CDN取得に失敗しても、古いローカルキャッシュ→それも無ければハードコード価格へ
   自動フォールバックするため、**診断機能は常に動く**。
 - `app.js` は無改修（`/api/price`・`/api/bto` の応答形式は従来と同一）。
@@ -163,11 +163,11 @@ REMOTE_CACHE_URL = os.environ.get(
 
 ```powershell
 # 生成したJSONをローカルHTTPで配信
-cd /var/www/pcchecker-cache  # or 任意のフォルダ
+cd /var/www/pccustomsupport-cache  # or 任意のフォルダ
 python -m http.server 9000
 
 # exe/アプリ側を「鍵なし＝配布版」状態にして、ローカルURLを向ける
-$env:PCCHECKER_CACHE_URL = "http://localhost:9000/price_cache.json"
+$env:PCCUSTOMSUPPORT_CACHE_URL = "http://localhost:9000/price_cache.json"
 # （.env を退避するか、別フォルダで起動して is_configured() を False にする）
 python main.py
 ```
@@ -187,7 +187,7 @@ python main.py
 npx wrangler kv namespace create FEEDBACK_KV   # 表示された id を控える
 
 # wrangler.toml（relay/ に置く）
-#   name = "pcchecker-feedback"
+#   name = "pccustomsupport-feedback"
 #   main = "feedback-worker.js"
 #   compatibility_date = "2026-01-01"
 #   kv_namespaces = [{ binding = "FEEDBACK_KV", id = "<KV_ID>" }]
@@ -199,8 +199,8 @@ cd relay && npx wrangler deploy
 ```
 
 ### クライアント側の設定
-発行された `https://pcchecker-feedback.<account>.workers.dev` を
-`feedback_client.py` の `FEEDBACK_URL`（または環境変数 `PCCHECKER_FEEDBACK_URL`）に設定する。
+発行された `https://pccustomsupport-feedback.<account>.workers.dev` を
+`feedback_client.py` の `FEEDBACK_URL`（または環境変数 `PCCUSTOMSUPPORT_FEEDBACK_URL`）に設定する。
 
 ### 挙動
 - 受信フィードバックは KV に保存（`fb:<時刻>:<uuid>` キー）、設定時は Discord にも通知。
@@ -211,7 +211,7 @@ cd relay && npx wrangler deploy
 ### ローカル動作確認
 ```powershell
 # 簡易スタブで成功(204)を返す例
-$env:PCCHECKER_FEEDBACK_URL = "http://localhost:9100/"
+$env:PCCUSTOMSUPPORT_FEEDBACK_URL = "http://localhost:9100/"
 python -m http.server 9100   # 204ではなく200だが ok:True になる
 # 別ターミナルでアプリを起動し、フィードバックフォームから送信
 ```

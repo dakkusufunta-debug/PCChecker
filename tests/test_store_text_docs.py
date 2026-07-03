@@ -39,7 +39,7 @@ def test_privacy_policy_html_is_standalone_and_consistent():
 
     assert "<!DOCTYPE html>" in text
     assert "<style>" in text
-    assert "PCChecker プライバシーポリシー" in text
+    assert "PCカスタムサポート プライバシーポリシー" in text
     assert "最終更新日: 2026-06-16" in text
     assert "提供者: Mirato" in text
     assert "既定では外部に送信されません" in text
@@ -48,16 +48,20 @@ def test_privacy_policy_html_is_standalone_and_consistent():
     assert "TODO" not in text
 
 
-def test_store_submission_doc_has_v1_0_1_build_record():
+def test_store_submission_doc_has_v1_0_2_build_record():
     text = _read_docs("docs/store-submission.md")
 
-    # バージョンと commit
-    assert "1.0.1" in text
-    assert "1.0.1.0" in text
-    assert "a064c47" in text
+    assert "TODO" not in text
+
+    # バージョンとStore固定ID
+    assert "1.0.2" in text
+    assert "1.0.2.0" in text
+    assert "Mirato.PCChecker" in text
+    assert "Mirato.PCChecker_n9bj028cvzf5c" in text
 
     # MSIX ハッシュ (大文字で記録)
-    assert "6C53E3BEAA81D1ADC147AFA49E99C305B5673941BDD60886982C836757321AD6" in text
+    assert "SHA-256" in text
+    assert "算出待ち" not in text
 
     # 自己署名 Root 追加を避ける旨の注意
     assert "Root" in text
@@ -84,8 +88,14 @@ def test_store_listing_has_submission_sections():
         assert heading in text
 
     assert "無料" in text
-    # ローカル処理(=お使いの PC 内で処理)を訴求していること
-    assert "お使いの PC 内で処理" in text
+    assert "お使いのパソコンの性能をわかりやすく解説" in text
+    assert "パーツ交換やパソコンの買い替えをアドバイス" in text
+    assert "今の PC がまだ使えるか" in text
+    assert "部品別" not in text
+    assert "参考候補" not in text
+    assert "価格目安" not in text
+    public_text = text.split("## 審査メモ用の補足文", maxsplit=1)[0]
+    assert "氏名や PC 名などの個人情報を外部へ送信することはありません" not in public_text
     assert "127.0.0.1" in text
     assert "フルトラスト権限" in text
     assert ".env" in text
